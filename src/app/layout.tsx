@@ -18,6 +18,12 @@ const bebasNeue = Bebas_Neue({
   display: 'swap',
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://retro-boutique.vercel.app'),
   title: 'Retro Boutique — Машка мода во Прилеп од 2003',

@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
         <div className="space-y-4">
           {/* 1. Add Product */}
           <Link
-            href="/admin/products/new"
+            href="/admin/products?new=1"
             className="w-full p-6 bg-ink text-white hover:bg-retro-orange hover:text-white transition-all flex items-center gap-5 shadow-md transform hover:-translate-y-0.5"
           >
             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-retro-orange group-hover:text-white shrink-0">

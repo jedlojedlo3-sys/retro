@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Product } from '@/types/database';
 import { CATEGORIES } from '@/lib/utils';
 import { ProductCard } from './ProductCard';
-import { Search, PackageOpen, X, Sparkles, Package, ArrowUpDown } from 'lucide-react';
+import { Search, X, Sparkles, ArrowUpDown, Check } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { getClientProducts } from '@/lib/products-store';
 
@@ -56,11 +56,11 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         if (sortBy === 'new_first') {
           if (a.is_new && !b.is_new) return -1;
           if (!a.is_new && b.is_new) return 1;
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
         }
         if (sortBy === 'price_asc') return a.price - b.price;
         if (sortBy === 'price_desc') return b.price - a.price;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
       });
   }, [activeProducts, selectedCategory, searchQuery, onlyInStock, onlyNew, sortBy, getCategoryText]);
 
@@ -75,174 +75,157 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Page header */}
-      <div className="pb-8 border-b border-black/[0.06] space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="h-px w-8 bg-retro-orange" />
-          <span className="section-eyebrow">RETRO BOUTIQUE · PRILEP</span>
+    <div className="space-y-6">
+      {/* ── Compact Header ─────────────────────────────── */}
+      <div className="pb-3 border-b border-black/[0.06] flex items-baseline justify-between gap-4">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-retro-orange block">
+            RETRO BOUTIQUE · PRILEP
+          </span>
+          <h1 className="font-display text-4xl sm:text-6xl uppercase text-ink leading-tight tracking-tight">
+            {language === 'mk' ? 'Машка Колекција' : "Men's Collection"}
+          </h1>
         </div>
-        <h1 className="font-display text-6xl sm:text-8xl uppercase text-ink leading-none tracking-tight">
-          {language === 'mk' ? "Машка Колекција" : "Men's Collection"}
-        </h1>
-        <p className="text-sm text-muted max-w-xl leading-relaxed">
-          {language === 'mk'
-            ? 'Избери големина и резервирај онлајн. Подигнување и плаќање исклучиво во продавницата на Stiv Naumov 8 во Прилеп.'
-            : 'Select your size and reserve online. Pickup and payment exclusively at our store at Stiv Naumov 8 in Prilep.'}
-        </p>
+
+        <span className="text-xs font-semibold text-muted shrink-0">
+          {filteredProducts.length} {language === 'mk' ? 'модели' : 'items'}
+        </span>
       </div>
 
-      {/* ── FILTER PANEL ─────────────────────────────── */}
-      <div className="bg-white border border-black/[0.06] shadow-card overflow-hidden">
+      {/* ── Compact Static Filter Bar (Like Zara / ASOS) ─────────────────────────────── */}
+      <div className="space-y-2.5">
+        {/* Row 1: Horizontal Scrollable Category Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+          {/* All */}
+          <button
+            onClick={() => { setSelectedCategory('all'); setOnlyNew(false); }}
+            className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-150 ${
+              selectedCategory === 'all' && !onlyNew
+                ? 'bg-ink text-white shadow-sm'
+                : 'bg-white border border-black/10 text-muted hover:text-ink hover:border-ink'
+            }`}
+          >
+            {t('cat_all')} ({activeProducts.length})
+          </button>
 
-        {/* Row 1: Category pills */}
-        <div className="px-5 pt-5 pb-4 border-b border-black/[0.04]">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted mb-3">
-            {language === 'mk' ? 'Категорија' : 'Category'}
-          </p>
-          <div className="flex flex-wrap gap-2">
+          {/* NEW Filter Pill */}
+          {newCount > 0 && (
             <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] border transition-all duration-200 ${
-                selectedCategory === 'all'
-                  ? 'bg-ink text-white border-ink'
-                  : 'border-black/10 text-muted hover:border-ink hover:text-ink bg-surface'
+              onClick={() => {
+                setOnlyNew(!onlyNew);
+                if (!onlyNew) setSelectedCategory('all');
+              }}
+              className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-150 flex items-center gap-1 ${
+                onlyNew
+                  ? 'bg-retro-orange text-white shadow-sm ring-2 ring-retro-orange/30'
+                  : 'bg-white border border-retro-orange/40 text-retro-orange hover:bg-retro-orange hover:text-white'
               }`}
             >
-              {t('cat_all')} <span className="opacity-60 ml-1">({activeProducts.length})</span>
+              <Sparkles size={12} />
+              <span>⭐ NEW</span>
+              <span className="opacity-80 ml-0.5">({newCount})</span>
             </button>
-            {CATEGORIES.map((cat) => {
-              const count = activeProducts.filter((p) => p.category === cat.key).length;
-              if (count === 0) return null;
-              return (
-                <button
-                  key={cat.key}
-                  onClick={() => setSelectedCategory(cat.key)}
-                  className={`px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] border transition-all duration-200 ${
-                    selectedCategory === cat.key
-                      ? 'bg-ink text-white border-ink'
-                      : 'border-black/10 text-muted hover:border-ink hover:text-ink bg-surface'
-                  }`}
-                >
-                  {getCategoryText(cat.key)} <span className="opacity-60 ml-1">({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          )}
 
-        {/* Row 2: Quick toggles row */}
-        <div className="px-5 py-4 border-b border-black/[0.04]">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted mb-3">
-            {language === 'mk' ? 'Hitre izbire' : 'Quick Filters'}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {/* NEW toggle */}
-            {newCount > 0 && (
+          {/* Categories */}
+          {CATEGORIES.map((cat) => {
+            const count = activeProducts.filter((p) => p.category === cat.key).length;
+            if (count === 0) return null;
+            const isSelected = selectedCategory === cat.key && !onlyNew;
+            return (
               <button
-                onClick={() => setOnlyNew(!onlyNew)}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-[11px] font-bold uppercase tracking-wider border transition-all duration-200 ${
-                  onlyNew
-                    ? 'bg-retro-orange text-white border-retro-orange'
-                    : 'border-black/10 text-ink bg-surface hover:border-retro-orange hover:text-retro-orange'
+                key={cat.key}
+                onClick={() => { setSelectedCategory(cat.key); setOnlyNew(false); }}
+                className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-150 ${
+                  isSelected
+                    ? 'bg-ink text-white shadow-sm'
+                    : 'bg-white border border-black/10 text-muted hover:text-ink hover:border-ink'
                 }`}
               >
-                <Sparkles size={12} />
-                <span>{language === 'mk' ? 'Нови пристигнувања' : 'New Arrivals'}</span>
-                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-extrabold ${onlyNew ? 'bg-white/30' : 'bg-retro-orange/10 text-retro-orange'}`}>
-                  {newCount}
-                </span>
+                {getCategoryText(cat.key)} ({count})
               </button>
-            )}
-
-            {/* In stock toggle */}
-            <button
-              onClick={() => setOnlyInStock(!onlyInStock)}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider border transition-all duration-200 ${
-                onlyInStock
-                  ? 'bg-emerald-700 text-white border-emerald-700'
-                  : 'border-black/10 text-ink bg-surface hover:border-emerald-700 hover:text-emerald-700'
-              }`}
-            >
-              <Package size={12} />
-              <span>{t('only_in_stock')}</span>
-            </button>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Row 3: Search + Sort */}
-        <div className="px-5 py-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted/60 pointer-events-none" />
+        {/* Row 2: Slim Search, In-Stock, and Sort Toolbar */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[160px] sm:min-w-[220px]">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
             <input
               type="text"
-              placeholder={language === 'mk' ? 'Пребарај по назив, категорија...' : 'Search by name, category...'}
+              placeholder={language === 'mk' ? 'Пребарај...' : 'Search...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-9 py-2.5 text-xs bg-surface border border-black/[0.08] text-ink placeholder:text-muted/50 focus:outline-none focus:border-ink/30 transition-colors"
+              className="w-full h-8 pl-8 pr-7 text-xs bg-white border border-black/10 rounded-full text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink transition-colors"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
               >
-                <X size={13} />
+                <X size={12} />
               </button>
             )}
           </div>
 
-          {/* Sort */}
-          <div className="flex items-center gap-2 shrink-0">
-            <ArrowUpDown size={13} className="text-muted/60" />
+          {/* In Stock toggle pill */}
+          <button
+            onClick={() => setOnlyInStock(!onlyInStock)}
+            className={`h-8 px-3 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+              onlyInStock
+                ? 'bg-emerald-700 text-white border-emerald-700'
+                : 'bg-white border-black/10 text-muted hover:text-ink'
+            }`}
+          >
+            {onlyInStock && <Check size={12} strokeWidth={3} />}
+            <span>{language === 'mk' ? 'На залиха' : 'In stock'}</span>
+          </button>
+
+          {/* Sort Selector */}
+          <div className="relative shrink-0">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-surface border border-black/[0.08] text-ink px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-ink/30 transition-colors cursor-pointer"
+              className="h-8 pl-3 pr-7 bg-white border border-black/10 rounded-full text-xs font-semibold text-ink focus:outline-none focus:border-ink transition-colors cursor-pointer appearance-none"
             >
-              <option value="new_first">{language === 'mk' ? '⭐ Нови прво' : '⭐ New First'}</option>
+              <option value="new_first">{language === 'mk' ? '⭐ Нови прво' : '⭐ New first'}</option>
               <option value="newest">{t('sort_newest')}</option>
               <option value="price_asc">{t('sort_price_asc')}</option>
               <option value="price_desc">{t('sort_price_desc')}</option>
             </select>
+            <ArrowUpDown size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
           </div>
 
-          {/* Reset */}
+          {/* Reset button if filters active */}
           {hasActiveFilters && (
             <button
               onClick={resetAll}
-              className="inline-flex items-center gap-1.5 px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider border border-black/10 text-muted hover:text-red-600 hover:border-red-300 transition-colors shrink-0"
+              className="h-8 px-2.5 rounded-full text-[11px] font-bold uppercase text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1"
+              title="Reset all"
             >
               <X size={12} />
-              <span>{t('reset_filters')}</span>
+              <span>{language === 'mk' ? 'Исчисти' : 'Reset'}</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Results count */}
-      {filteredProducts.length > 0 && (
-        <p className="text-xs text-muted font-medium">
-          {filteredProducts.length} {language === 'mk' ? 'производи' : 'products'}
-          {onlyNew && <span className="ml-2 px-2 py-0.5 bg-retro-orange/10 text-retro-orange font-bold rounded-full text-[10px]">NEW</span>}
-        </p>
-      )}
-
-      {/* Grid or empty state */}
+      {/* ── Products Grid (2 columns on mobile, 3 on tablet, 4 on desktop) ─────────────────────────────── */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 pt-2">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="py-24 text-center space-y-4">
-          <PackageOpen size={40} className="mx-auto text-muted/30" />
-          <h3 className="font-display text-3xl uppercase text-ink">{t('no_products_found')}</h3>
-          <p className="text-sm text-muted">{t('no_products_desc')}</p>
+        <div className="py-20 text-center space-y-3 bg-white border border-black/5 p-8 rounded-none">
+          <p className="font-display text-2xl uppercase text-ink">{t('no_products_found')}</p>
+          <p className="text-xs text-muted max-w-sm mx-auto">{t('no_products_desc')}</p>
           <button
             onClick={resetAll}
-            className="mt-2 px-6 py-3 bg-ink text-white text-xs font-semibold uppercase tracking-wider hover:bg-retro-orange transition-colors duration-200"
+            className="mt-2 px-5 py-2.5 bg-ink text-white text-xs font-bold uppercase tracking-wider hover:bg-retro-orange transition-colors"
           >
             {t('reset_filters')}
           </button>
