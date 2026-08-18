@@ -39,22 +39,31 @@ export function Footer() {
           </a>
         </div>
 
-        {/* Location */}
+        {/* Location & Opening Hours */}
         <div className="space-y-5">
           <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
-            {t('visit_address_label')}
+            {t('visit_address_label')} & {t('visit_hours_label')}
           </h4>
           <div className="space-y-3 text-sm">
             <div className="flex items-start gap-2.5 text-white/60">
               <MapPin size={15} className="text-retro-orange shrink-0 mt-0.5" />
               <span>Stiv Naumov 8<br />Prilep 7500<br />North Macedonia</span>
             </div>
-            <div className="flex items-start gap-2.5 text-white/60">
+            <div className="flex items-start gap-2.5 text-white/60 text-xs">
               <Clock size={15} className="text-retro-orange shrink-0 mt-0.5" />
-              <span>
-                {t('visit_mon_sat')} 09:00–20:00<br />
-                <span className="text-white/30">{t('visit_sun')} {t('visit_closed')}</span>
-              </span>
+              <div className="space-y-1">
+                <div>
+                  <span className="text-white/40">{t('visit_mon_tue_thu_fri')}</span>{' '}
+                  <span className="font-semibold text-white">09:00–20:00</span>
+                </div>
+                <div>
+                  <span className="text-white/40">{t('visit_wed_sat')}</span>{' '}
+                  <span className="font-semibold text-white">09:00–16:00</span>
+                </div>
+                <div className="text-white/30">
+                  {t('visit_sun')} {t('visit_closed')}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -109,7 +109,7 @@ export default function AddProductPage() {
     }
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
-      setErrorMessage('Внесете важечка цена во денари.');
+      setErrorMessage('Внесете важечка цена во den.');
       return;
     }
 
@@ -248,7 +248,7 @@ export default function AddProductPage() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                4. Цена (ден.) <span className="text-retro-orange">*</span>
+                4. Цена (den.) <span className="text-retro-orange">*</span>
               </label>
               <input
                 type="number"

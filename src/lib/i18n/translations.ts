@@ -5,19 +5,21 @@ export const translations = {
     // Top banner
     top_location: 'ПРИЛЕП · ОД 2003',
     top_notice: 'БЕЗ ОНЛАЈН ПЛАЌАЊЕ · ПОДИГАЊЕ И ПЛАЌАЊЕ ВО ПРОДАВНИЦА',
-    top_hours: 'ПОН–САБ 09:00–20:00',
+    top_hours: 'ПОН/ТОР/ЧЕТ/ПЕТ 09:00–20:00 · СРЕ/САБ 09:00–16:00',
 
-    // Nav
+    // Nav & Mobile Bottom Nav
+    nav_home: 'Дома',
     nav_collection: 'Колекција',
     nav_about: 'За нас',
     nav_location: 'Локација',
     nav_admin: 'Марија Админ',
+    nav_lang: 'Јазик',
 
     // Hero
     hero_eyebrow: "MEN'S CASUAL WEAR · PRILEP",
     hero_title_1: 'RETRO',
     hero_title_2: 'BOUTIQUE',
-    hero_desc: 'Casual машка мода, одличен избор и искрен личен пристап во Прилеп од 2003 година. Резервирај го твоето парче онлајн, подигни и плати во продавницата.',
+    hero_desc: 'Casual машка мода, одличен избор и искрен личен пристап во Prilep од 2003 година. Резервирај го твоето парче онлајн, подигни и плати во продавницата.',
     hero_cta_shop: 'Погледни ја колекцијата',
     hero_cta_visit: 'Stiv Naumov 8, Prilep',
 
@@ -25,7 +27,7 @@ export const translations = {
     editorial_eyebrow: 'НОВА СЕЛЕКЦИЈА',
     editorial_title: 'Облечи се едноставно.',
     editorial_subtitle: 'Изгледај средено.',
-    editorial_desc: 'Retro Boutique е локална машка продавница во Прилеп. Секое парче е внимателно избрано за да ти понуди врвна удобност, совршен крој и автентичен секојдневен изглед.',
+    editorial_desc: 'Retro Boutique е локална машка продавница во Prilep. Секое парче е внимателно избрано за да ти понуди врвна удобност, совршен крој и автентичен секојдневен изглед.',
 
     // Campaign looks
     look_01_title: 'Everyday Denim & Layers',
@@ -76,7 +78,7 @@ export const translations = {
     notice_48h: '* Резервацијата те чека во продавницата 48 часа. Плаќање при подигнување.',
     model_description: 'Опис на моделот:',
     guarantee_location: 'Подигнување: Stiv Naumov 8, Prilep',
-    guarantee_hours: 'Работно време: Пон–Саб 09:00 – 20:00',
+    guarantee_hours: 'Пон/Тор/Чет/Пет 09:00–20:00 · Сре/Саб 09:00–16:00',
     guarantee_fitting: 'Можност за проба и замена на големина на лице место',
 
     // How it works
@@ -91,29 +93,32 @@ export const translations = {
     step_02_desc: 'Внеси само име и телефонски број. Парчето се резервира веднаш и те чека во продавницата 48 часа.',
     step_03_num: '03',
     step_03_title: 'Подигни & плати во Retro',
-    step_03_desc: 'Посети нè на Stiv Naumov 8 во Прилеп, пробај го парчето и плати на каса.',
+    step_03_desc: 'Посети нè на Stiv Naumov 8 во Prilep, пробај го парчето и плати на каса.',
 
     // Story
     story_eyebrow: 'ОД 2003 ГОДИНА',
     story_title_1: 'Не само продавница.',
     story_title_2: 'Твој локален избор.',
-    story_desc_1: 'Повеќе од две децении Retro Boutique им нуди на мажите во Прилеп квалитетна, практична и модерна секојдневна гардероба.',
+    story_desc_1: 'Повеќе од две децении Retro Boutique им нуди на мажите во Prilep квалитетна, практична и модерна секојдневна гардероба.',
     story_desc_2: 'Нашата најголема вредност е искрената помош: ако не си сигурен за големина, должина или со што најдобро да го искомбинираш избраниот џемпер или кошула, ние сме тука лично да ти помогнеме.',
     story_badge_1: '20+ години традиција',
     story_badge_2: 'Проверени кроеви и материјали',
 
     // Visit Section
     visit_eyebrow: 'ПОСЕТИ НÈ ВО ПРОДАВНИЦАТА',
-    visit_desc: 'Нашата продавница се наоѓа во срцето на Прилеп. Посети нè за да ги пробаш новите модели и да добиеш искрен совет за големина и комбинација.',
+    visit_desc: 'Нашата продавница се наоѓа во срцето на Prilep. Посети нè за да ги пробаш новите модели и да добиеш искрен совет за големина и комбинација.',
     visit_address_label: 'Адреса',
     visit_hours_label: 'Работно време',
-    visit_mon_sat: 'Понеделник – Сабота:',
+    visit_mon_tue_thu_fri: 'Пон, Тор, Чет, Пет:',
+    visit_mon_tue_thu_fri_time: '09:00 – 20:00',
+    visit_wed_sat: 'Среда, Сабота:',
+    visit_wed_sat_time: '09:00 – 16:00',
     visit_sun: 'Недела:',
     visit_closed: 'Затворено',
     visit_maps_btn: 'Отвори на Google Maps',
 
     // Footer
-    footer_about: 'Локална машка продавница за облека во Прилеп. Квалитетни фармерки, кошули, џемпери и секојдневна машка мода со искрена и лична услуга.',
+    footer_about: 'Локална машка продавница за облека во Prilep. Квалитетни фармерки, кошули, џемпери и секојдневна машка мода со искрена и лична услуга.',
     footer_click_collect_desc: 'Избери големина и резервирај онлајн за 10 секунди. Резервацијата те чека во продавницата 48 часа. Без онлајн плаќање.',
     footer_instagram_btn: 'Следи нè на Instagram',
     footer_rights: 'Сите права се задржани.',
@@ -147,6 +152,7 @@ export const translations = {
     conf_pickup_info: 'Информации за подигање:',
     conf_location_label: 'Локација',
     conf_hours_label: 'Работно време',
+    conf_hours_val: 'Пон/Тор/Чет/Пет 09–20ч · Сре/Саб 09–16ч',
     conf_notice_title: 'Важна напомена:',
     conf_notice_desc: 'Резервацијата важи 48 часа. Плаќањето се врши исклучиво во продавницата при подигнување. Доколку имате прашање, контактирајте нè на Instagram.',
     conf_maps_btn: 'Отвори Google Maps',
@@ -156,13 +162,15 @@ export const translations = {
     // Top banner
     top_location: 'PRILEP · SINCE 2003',
     top_notice: 'NO ONLINE PAYMENT · PICKUP & PAY IN STORE',
-    top_hours: 'MON–SAT 09:00–20:00',
+    top_hours: 'MON/TUE/THU/FRI 09:00–20:00 · WED/SAT 09:00–16:00',
 
-    // Nav
+    // Nav & Mobile Bottom Nav
+    nav_home: 'Home',
     nav_collection: 'Collection',
     nav_about: 'About',
     nav_location: 'Location',
     nav_admin: 'Maria Admin',
+    nav_lang: 'Language',
 
     // Hero
     hero_eyebrow: "MEN'S CASUAL WEAR · PRILEP",
@@ -227,7 +235,7 @@ export const translations = {
     notice_48h: '* Reservation holds for 48 hours. Payment happens when picking up in store.',
     model_description: 'Product Description:',
     guarantee_location: 'Store pickup: Stiv Naumov 8, Prilep',
-    guarantee_hours: 'Opening hours: Mon–Sat 09:00 – 20:00',
+    guarantee_hours: 'Mon/Tue/Thu/Fri 09:00–20:00 · Wed/Sat 09:00–16:00',
     guarantee_fitting: 'Fitting and size exchange available in store',
 
     // How it works
@@ -258,7 +266,10 @@ export const translations = {
     visit_desc: 'Our boutique is located in the heart of Prilep. Drop by to explore new arrivals and get honest styling and sizing advice.',
     visit_address_label: 'Address',
     visit_hours_label: 'Opening Hours',
-    visit_mon_sat: 'Monday – Saturday:',
+    visit_mon_tue_thu_fri: 'Mon, Tue, Thu, Fri:',
+    visit_mon_tue_thu_fri_time: '09:00 – 20:00',
+    visit_wed_sat: 'Wed, Sat:',
+    visit_wed_sat_time: '09:00 – 16:00',
     visit_sun: 'Sunday:',
     visit_closed: 'Closed',
     visit_maps_btn: 'Open in Google Maps',
@@ -298,6 +309,7 @@ export const translations = {
     conf_pickup_info: 'Pickup Information:',
     conf_location_label: 'Location',
     conf_hours_label: 'Opening Hours',
+    conf_hours_val: 'Mon/Tue/Thu/Fri 09–20h · Wed/Sat 09–16h',
     conf_notice_title: 'Important note:',
     conf_notice_desc: 'Your reservation is held for 48 hours. Payment is made exclusively at the physical store when picking up. If you have any questions, reach out on Instagram.',
     conf_maps_btn: 'Open Google Maps',

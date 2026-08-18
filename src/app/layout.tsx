@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
+import { MobileBottomNav } from '@/components/storefront/MobileBottomNav';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://retro-boutique.vercel.app'),
@@ -34,9 +35,15 @@ const jsonLd = {
   openingHoursSpecification: [
     {
       '@type': 'OpeningHoursSpecification',
-      dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+      dayOfWeek: ['Monday', 'Tuesday', 'Thursday', 'Friday'],
       opens: '09:00',
       closes: '20:00',
+    },
+    {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Wednesday', 'Saturday'],
+      opens: '09:00',
+      closes: '16:00',
     },
   ],
   sameAs: ['https://www.instagram.com/retro_boutique/'],
@@ -51,8 +58,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-paper text-ink selection:bg-retro-orange selection:text-white">
-        <LanguageProvider>{children}</LanguageProvider>
+      <body className="min-h-screen flex flex-col bg-paper text-ink selection:bg-retro-orange selection:text-white pb-16 md:pb-0">
+        <LanguageProvider>
+          {children}
+          <MobileBottomNav />
+        </LanguageProvider>
       </body>
     </html>
   );

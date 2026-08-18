@@ -8,9 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatPrice(amount: number | null | undefined): string {
   if (amount === null || amount === undefined || isNaN(amount)) {
-    return '0 ден.';
+    return '0 den.';
   }
-  return `${new Intl.NumberFormat('mk-MK').format(amount)} ден.`;
+  return `${new Intl.NumberFormat('mk-MK').format(amount)} den.`;
 }
 
 export const CATEGORIES: { key: Category; labelMk: string }[] = [

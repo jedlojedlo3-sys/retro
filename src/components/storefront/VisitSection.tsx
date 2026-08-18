@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Clock } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export function VisitSection() {
@@ -13,7 +13,7 @@ export function VisitSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch min-h-[520px]">
 
           {/* Info Panel */}
-          <div className="lg:col-span-4 bg-ink text-white p-10 sm:p-12 flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-ink text-white p-8 sm:p-12 flex flex-col justify-between">
             <div className="space-y-8">
               <div>
                 <div className="flex items-center gap-3 mb-6">
@@ -38,16 +38,23 @@ export function VisitSection() {
                   </span>
                   <span className="font-semibold text-white">Stiv Naumov 8, Prilep 7500</span>
                 </div>
-                <div>
-                  <span className="text-[10px] tracking-[0.2em] uppercase font-semibold text-white/30 block mb-1">
-                    {t('visit_hours_label')}
-                  </span>
-                  <div className="space-y-1 font-medium">
-                    <div className="flex justify-between text-white">
-                      <span>{t('visit_mon_sat')}</span>
-                      <span>09:00 – 20:00</span>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase font-semibold text-white/30">
+                    <Clock size={12} className="text-retro-orange" />
+                    <span>{t('visit_hours_label')}</span>
+                  </div>
+
+                  <div className="space-y-1.5 font-medium bg-white/[0.04] border border-white/[0.08] p-3 text-xs">
+                    <div className="flex justify-between items-center text-white">
+                      <span>{t('visit_mon_tue_thu_fri')}</span>
+                      <span className="font-bold text-retro-orange">{t('visit_mon_tue_thu_fri_time')}</span>
                     </div>
-                    <div className="flex justify-between text-white/35">
+                    <div className="flex justify-between items-center text-white">
+                      <span>{t('visit_wed_sat')}</span>
+                      <span className="font-bold text-retro-orange">{t('visit_wed_sat_time')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-white/40 pt-1 border-t border-white/[0.06]">
                       <span>{t('visit_sun')}</span>
                       <span>{t('visit_closed')}</span>
                     </div>
@@ -68,7 +75,7 @@ export function VisitSection() {
           </div>
 
           {/* Map */}
-          <div className="lg:col-span-8 overflow-hidden bg-surface min-h-[400px] lg:min-h-0">
+          <div className="lg:col-span-7 overflow-hidden bg-surface min-h-[400px] lg:min-h-0">
             <iframe
               title="Retro Boutique Prilep location"
               src="https://www.google.com/maps?q=Stiv%20Naumov%208%2C%20Prilep%2C%20North%20Macedonia&output=embed"

@@ -306,7 +306,7 @@ export default function EditProductPage() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                Цена (ден.)
+                Цена (den.)
               </label>
               <input
                 type="number"

@@ -62,7 +62,7 @@ export function ReservationConfirmationClient({ number }: ReservationConfirmatio
               <Clock size={16} className="text-retro-orange" />
               <span>{t('conf_hours_label')}</span>
             </div>
-            <p className="text-sm font-semibold">Mon–Sat: 09:00 – 20:00</p>
+            <p className="text-xs font-semibold">{t('conf_hours_val')}</p>
           </div>
         </div>
 
