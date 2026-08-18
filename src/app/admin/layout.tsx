@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-
-const ADMIN_SECRET_CODE = 'Retro2003Admin';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -18,17 +18,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    const authLocal = localStorage.getItem('retro_admin_auth');
-    const authSession = sessionStorage.getItem('retro_admin_auth');
-    const hasValidCookie = document.cookie.includes(`retro_admin_auth=${ADMIN_SECRET_CODE}`);
-
-    if (authLocal === ADMIN_SECRET_CODE || authSession === ADMIN_SECRET_CODE || hasValidCookie) {
-      setIsAuthorized(true);
-    } else {
-      setIsAuthorized(false);
-      router.replace('/admin/login');
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/admin/auth');
+        if (res.ok) {
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+          router.replace('/admin/login');
+        }
+      } catch {
+        const authLocal = localStorage.getItem('retro_admin_auth');
+        if (authLocal === 'Retro2003Admin') {
+          setIsAuthorized(true);
+        } else {
+          setIsAuthorized(false);
+          router.replace('/admin/login');
+        }
+      } finally {
+        setChecking(false);
+      }
     }
-    setChecking(false);
+
+    checkAuth();
   }, [pathname, router]);
 
   if (checking) {
@@ -36,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen bg-paper flex items-center justify-center">
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-2 border-retro-orange border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs uppercase font-bold text-muted tracking-wider">Проверка на пристап...</p>
+          <p className="text-xs uppercase font-bold text-muted tracking-wider">{t('admin_checking')}</p>
         </div>
       </div>
     );

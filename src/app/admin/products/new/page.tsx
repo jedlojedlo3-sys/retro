@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Camera, Plus, Trash2, ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { Camera, Trash2, Check, AlertCircle } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Category, Product, ProductVariant } from '@/types/database';
 import { CATEGORIES } from '@/lib/utils';
 import { saveClientProduct } from '@/lib/products-store';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const PRESET_CLOTHING_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const PRESET_JEANS_SIZES = ['30', '31', '32', '33', '34', '36'];
@@ -19,6 +20,7 @@ interface VariantInput {
 
 export default function AddProductPage() {
   const router = useRouter();
+  const { t, getCategoryText } = useLanguage();
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Category>('jeans');
@@ -36,7 +38,6 @@ export default function AddProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Quick preset size switchers
   const applyPresetSizes = (sizes: string[]) => {
     setVariants(sizes.map((s) => ({ size: s, stock_quantity: 2 })));
   };
@@ -64,8 +65,8 @@ export default function AddProductPage() {
           setImages((prev) => [...prev, data.url]);
         }
       }
-    } catch (err: any) {
-      setErrorMessage('Грешка при прикачување на сликата.');
+    } catch {
+      setErrorMessage('Upload error');
     } finally {
       setIsUploading(false);
     }
@@ -105,22 +106,22 @@ export default function AddProductPage() {
     setErrorMessage(null);
 
     if (!name.trim()) {
-      setErrorMessage('Внесете назив на производот.');
+      setErrorMessage('Please enter product name.');
       return;
     }
 
     if (!price || isNaN(Number(price)) || Number(price) <= 0) {
-      setErrorMessage('Внесете важечка цена во den.');
+      setErrorMessage('Please enter valid price in den.');
       return;
     }
 
     if (images.length === 0) {
-      setErrorMessage('Прикачете барем една фотографија од производот.');
+      setErrorMessage('Please add at least one product photo.');
       return;
     }
 
     if (variants.length === 0) {
-      setErrorMessage('Додајте барем една големина со залиха.');
+      setErrorMessage('Please add at least one size with stock.');
       return;
     }
 
@@ -152,7 +153,6 @@ export default function AddProductPage() {
       variants: productVariants,
     };
 
-    // Save to client store immediately so it's visible across the whole app
     saveClientProduct(newProduct);
 
     try {
@@ -181,20 +181,20 @@ export default function AddProductPage() {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col pb-16">
-      <AdminHeader title="ДОДАЈ ПРОИЗВОД" showBack backUrl="/admin" />
+      <AdminHeader title={t('admin_add_header')} showBack backUrl="/admin" />
 
       <main className="max-w-xl mx-auto w-full p-4 sm:p-6 space-y-6">
-        <form onSubmit={handleSubmit} className="bg-white border border-ink/15 p-6 sm:p-8 space-y-6 shadow-sm">
+        <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 sm:p-8 space-y-6 shadow-sm">
           {/* 1. Photos Section */}
           <div className="space-y-3">
             <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-              1. Фотографии <span className="text-retro-orange">*</span>
+              {t('admin_photos_label')} <span className="text-retro-orange">*</span>
             </label>
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
               {images.map((url, idx) => (
-                <div key={idx} className="relative aspect-[3/4] bg-paper border border-ink/20 group">
-                  <Image src={url} alt={`Слика ${idx + 1}`} fill className="object-cover" />
+                <div key={idx} className="relative aspect-[3/4] bg-surface border border-black/10 group">
+                  <Image src={url} alt={`Photo ${idx + 1}`} fill className="object-cover" />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(idx)}
@@ -204,17 +204,17 @@ export default function AddProductPage() {
                   </button>
                   {idx === 0 && (
                     <span className="absolute bottom-1 left-1 right-1 bg-ink/80 text-white text-[9px] font-bold text-center uppercase py-0.5">
-                      Главна
+                      {t('admin_photo_main')}
                     </span>
                   )}
                 </div>
               ))}
 
               {/* Upload trigger button */}
-              <label className="relative aspect-[3/4] border-2 border-dashed border-ink/30 hover:border-retro-orange flex flex-col items-center justify-center cursor-pointer bg-paper hover:bg-white transition-colors p-2 text-center">
+              <label className="relative aspect-[3/4] border-2 border-dashed border-black/20 hover:border-retro-orange flex flex-col items-center justify-center cursor-pointer bg-surface hover:bg-white transition-colors p-2 text-center">
                 <Camera size={26} className="text-muted group-hover:text-retro-orange mb-1" />
                 <span className="text-[11px] font-bold uppercase tracking-wide text-ink">
-                  {isUploading ? 'Се прикачува...' : 'Сликај / Додај'}
+                  {isUploading ? t('admin_photo_uploading') : t('admin_photo_upload')}
                 </span>
                 <input
                   type="file"
@@ -231,15 +231,15 @@ export default function AddProductPage() {
           {/* 2. Product Name */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-              2. Назив на производ <span className="text-retro-orange">*</span>
+              {t('admin_name_label')} <span className="text-retro-orange">*</span>
             </label>
             <input
               type="text"
               required
-              placeholder="Пр. Фармерки Slim Dark Blue"
+              placeholder={t('admin_name_placeholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-ink/20 bg-paper px-3.5 py-3 text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
+              className="w-full border border-black/10 bg-surface px-3.5 py-3 text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
             />
           </div>
 
@@ -247,7 +247,7 @@ export default function AddProductPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                3. Категорија <span className="text-retro-orange">*</span>
+                {t('admin_category_label')} <span className="text-retro-orange">*</span>
               </label>
               <select
                 value={category}
@@ -260,11 +260,11 @@ export default function AddProductPage() {
                     applyPresetSizes(PRESET_CLOTHING_SIZES);
                   }
                 }}
-                className="w-full border border-ink/20 bg-paper px-3.5 py-3 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
+                className="w-full border border-black/10 bg-surface px-3.5 py-3 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.key} value={cat.key}>
-                    {cat.labelMk}
+                    {getCategoryText(cat.key)}
                   </option>
                 ))}
               </select>
@@ -272,7 +272,7 @@ export default function AddProductPage() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                4. Цена (den.) <span className="text-retro-orange">*</span>
+                {t('admin_price_label')} <span className="text-retro-orange">*</span>
               </label>
               <input
                 type="number"
@@ -282,7 +282,7 @@ export default function AddProductPage() {
                 placeholder="1890"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full border border-ink/20 bg-paper px-3.5 py-3 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
+                className="w-full border border-black/10 bg-surface px-3.5 py-3 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
               />
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function AddProductPage() {
           <div className="space-y-3 pt-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-                5. Големини и залиха <span className="text-retro-orange">*</span>
+                {t('admin_sizes_label')} <span className="text-retro-orange">*</span>
               </label>
 
               {/* Fast presets */}
@@ -299,14 +299,14 @@ export default function AddProductPage() {
                 <button
                   type="button"
                   onClick={() => applyPresetSizes(PRESET_CLOTHING_SIZES)}
-                  className="px-2.5 py-1 bg-paper border border-ink/15 hover:border-ink text-ink"
+                  className="px-2.5 py-1 bg-surface border border-black/10 hover:border-ink text-ink"
                 >
                   S–XXL
                 </button>
                 <button
                   type="button"
                   onClick={() => applyPresetSizes(PRESET_JEANS_SIZES)}
-                  className="px-2.5 py-1 bg-paper border border-ink/15 hover:border-ink text-ink"
+                  className="px-2.5 py-1 bg-surface border border-black/10 hover:border-ink text-ink"
                 >
                   30–36
                 </button>
@@ -314,16 +314,16 @@ export default function AddProductPage() {
             </div>
 
             {/* List of size stock rows */}
-            <div className="space-y-2 bg-paper p-3 border border-ink/10">
+            <div className="space-y-2 bg-surface p-3 border border-black/10">
               {variants.map((v, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-white p-2.5 border border-ink/10">
+                <div key={idx} className="flex items-center justify-between bg-white p-2.5 border border-black/10">
                   <span className="font-bold text-sm text-ink w-12">{v.size}</span>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(idx, -1)}
-                      className="w-8 h-8 bg-paper hover:bg-ink hover:text-white border border-ink/20 font-bold text-sm flex items-center justify-center transition-colors"
+                      className="w-8 h-8 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-sm flex items-center justify-center transition-colors"
                     >
                       -
                     </button>
@@ -337,12 +337,12 @@ export default function AddProductPage() {
                           prev.map((item, i) => (i === idx ? { ...item, stock_quantity: val } : item))
                         );
                       }}
-                      className="w-14 text-center font-bold text-sm bg-paper border border-ink/20 py-1"
+                      className="w-14 text-center font-bold text-sm bg-surface border border-black/10 py-1"
                     />
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(idx, 1)}
-                      className="w-8 h-8 bg-paper hover:bg-ink hover:text-white border border-ink/20 font-bold text-sm flex items-center justify-center transition-colors"
+                      className="w-8 h-8 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-sm flex items-center justify-center transition-colors"
                     >
                       +
                     </button>
@@ -351,7 +351,7 @@ export default function AddProductPage() {
                       type="button"
                       onClick={() => handleRemoveVariant(idx)}
                       className="p-1.5 text-muted hover:text-red-600 ml-2"
-                      title="Избриши големина"
+                      title="Delete size"
                     >
                       <Trash2 size={15} />
                     </button>
@@ -363,17 +363,17 @@ export default function AddProductPage() {
               <div className="flex gap-2 pt-2">
                 <input
                   type="text"
-                  placeholder="Додај друга големина (пр. 38, XXXL)"
+                  placeholder={t('admin_size_custom_placeholder')}
                   value={customSize}
                   onChange={(e) => setCustomSize(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-ink/20"
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-black/10"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomSize}
-                  className="px-3 py-1.5 bg-ink text-white hover:bg-retro-orange hover:text-ink text-xs font-bold uppercase transition-colors"
+                  className="px-3 py-1.5 bg-ink text-white hover:bg-retro-orange hover:text-white text-xs font-bold uppercase transition-colors"
                 >
-                  Додај
+                  {t('admin_size_custom_btn')}
                 </button>
               </div>
             </div>
@@ -382,14 +382,14 @@ export default function AddProductPage() {
           {/* 5. Description (Optional) */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-              6. Краток опис <span className="text-muted font-normal text-[10px]">(опционално)</span>
+              {t('admin_desc_label')} <span className="text-muted font-normal text-[10px]">{t('admin_optional')}</span>
             </label>
             <textarea
               rows={3}
-              placeholder="Материјал, крој или совети за комбинирање..."
+              placeholder={t('admin_desc_placeholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full border border-ink/20 bg-paper p-3 text-sm text-ink focus:outline-none focus:border-ink rounded-none"
+              className="w-full border border-black/10 bg-surface p-3 text-sm text-ink focus:outline-none focus:border-ink rounded-none"
             />
           </div>
 
@@ -404,12 +404,12 @@ export default function AddProductPage() {
           <button
             type="submit"
             disabled={isSubmitting || isUploading}
-            className={`w-full py-4 bg-ink text-white hover:bg-retro-orange hover:text-ink font-bold text-sm uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
+            className={`w-full py-4 bg-ink text-white hover:bg-retro-orange hover:text-white font-bold text-sm uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
               isSubmitting ? 'opacity-50 cursor-wait' : ''
             }`}
           >
             <Check size={18} />
-            <span>{isSubmitting ? 'Се зачувува...' : 'Објави производ'}</span>
+            <span>{isSubmitting ? t('admin_saving') : t('admin_btn_publish')}</span>
           </button>
         </form>
       </main>

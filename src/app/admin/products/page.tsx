@@ -6,18 +6,19 @@ import Image from 'next/image';
 import { PlusCircle, Edit3, Eye, EyeOff, Search, Trash2 } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Product } from '@/types/database';
-import { formatPrice, getCategoryLabel } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { getClientProducts, saveClientProduct, deleteClientProduct } from '@/lib/products-store';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function AdminProductsPage() {
+  const { t, getCategoryText } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'hidden'>('all');
 
   const fetchProducts = async () => {
-    // 1. Initial client products
     const clientList = getClientProducts([]);
     setProducts(clientList);
 
@@ -63,7 +64,7 @@ export default function AdminProductsPage() {
   };
 
   const handleDeleteProduct = async (productId: string, productName: string) => {
-    if (!window.confirm(`Дали сте сигурни дека сакате да го избришете моделот "${productName}"?`)) {
+    if (!window.confirm(`${t('admin_confirm_delete')}\n\n"${productName}"`)) {
       return;
     }
 
@@ -89,7 +90,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col pb-16">
-      <AdminHeader title="ПРОИЗВОДИ" showBack backUrl="/admin" />
+      <AdminHeader title={t('admin_products_header')} showBack backUrl="/admin" />
 
       <main className="max-w-2xl mx-auto w-full p-4 sm:p-6 space-y-4">
         {/* Top Controls */}
@@ -98,7 +99,7 @@ export default function AdminProductsPage() {
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
-              placeholder="Пребарај..."
+              placeholder={t('admin_products_search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-black/10 text-ink focus:outline-none focus:border-ink rounded-none"
@@ -110,7 +111,7 @@ export default function AdminProductsPage() {
             className="px-4 py-2.5 bg-ink text-white hover:bg-retro-orange hover:text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
           >
             <PlusCircle size={15} />
-            <span>Додај</span>
+            <span>{t('admin_products_add_btn')}</span>
           </Link>
         </div>
 
@@ -122,7 +123,7 @@ export default function AdminProductsPage() {
               filterActive === 'all' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
-            Сите ({products.length})
+            {t('admin_tab_all')} ({products.length})
           </button>
           <button
             onClick={() => setFilterActive('active')}
@@ -130,7 +131,7 @@ export default function AdminProductsPage() {
               filterActive === 'active' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
-            Активни ({products.filter((p) => p.active).length})
+            {t('admin_tab_active')} ({products.filter((p) => p.active).length})
           </button>
           <button
             onClick={() => setFilterActive('hidden')}
@@ -138,7 +139,7 @@ export default function AdminProductsPage() {
               filterActive === 'hidden' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
-            Скриени ({products.filter((p) => !p.active).length})
+            {t('admin_tab_hidden')} ({products.filter((p) => !p.active).length})
           </button>
         </div>
 
@@ -172,11 +173,11 @@ export default function AdminProductsPage() {
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-surface text-muted border border-black/10">
-                        {getCategoryLabel(product.category)}
+                        {getCategoryText(product.category)}
                       </span>
                       {!product.active && (
                         <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-zinc-200 text-zinc-600">
-                          Скриен
+                          {t('admin_status_hidden')}
                         </span>
                       )}
                     </div>
@@ -188,7 +189,7 @@ export default function AdminProductsPage() {
                         {formatPrice(product.price)}
                       </span>
                       <span className="text-muted font-medium">
-                        Достапно: <strong>{totalStock} пар.</strong>
+                        {t('admin_stock_avail', { count: totalStock })}
                       </span>
                     </div>
                   </div>
@@ -199,7 +200,7 @@ export default function AdminProductsPage() {
                   <button
                     onClick={() => handleToggleActive(product.id, product.active)}
                     className="p-2 border border-black/10 hover:border-ink text-ink transition-colors"
-                    title={product.active ? 'Скриј од продавница' : 'Прикажи во продавница'}
+                    title={product.active ? 'Hide' : 'Show'}
                   >
                     {product.active ? <Eye size={16} /> : <EyeOff size={16} className="text-muted" />}
                   </button>
@@ -209,13 +210,13 @@ export default function AdminProductsPage() {
                     className="px-3 py-2 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                   >
                     <Edit3 size={14} />
-                    <span>Измени</span>
+                    <span>{t('admin_btn_edit')}</span>
                   </Link>
 
                   <button
                     onClick={() => handleDeleteProduct(product.id, product.name)}
                     className="p-2 border border-black/10 hover:border-red-600 hover:text-red-600 text-muted transition-colors"
-                    title="Избриши производ"
+                    title={t('admin_btn_delete')}
                   >
                     <Trash2 size={15} />
                   </button>
@@ -226,7 +227,7 @@ export default function AdminProductsPage() {
 
           {filteredProducts.length === 0 && !loading && (
             <div className="bg-white border border-black/10 p-8 text-center text-xs text-muted">
-              Нема производи за прикажување.
+              {t('admin_no_products')}
             </div>
           )}
         </div>

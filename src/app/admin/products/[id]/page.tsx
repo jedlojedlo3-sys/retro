@@ -3,18 +3,20 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
-import { Camera, Plus, Trash2, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Camera, Trash2, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Category, Product, ProductVariant } from '@/types/database';
 import { CATEGORIES } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { FALLBACK_DEMO_PRODUCTS } from '@/lib/mock-data';
 import { getClientProductById, saveClientProduct, deleteClientProduct } from '@/lib/products-store';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
+  const { t, getCategoryText } = useLanguage();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [name, setName] = useState('');
@@ -116,7 +118,7 @@ export default function EditProductPage() {
         }
       }
     } catch {
-      setErrorMessage('Грешка при прикачување на сликата.');
+      setErrorMessage('Upload error');
     } finally {
       setIsUploading(false);
     }
@@ -163,17 +165,17 @@ export default function EditProductPage() {
     setSuccessMessage(null);
 
     if (!name.trim()) {
-      setErrorMessage('Внесете назив на производот.');
+      setErrorMessage('Please enter product name.');
       return;
     }
 
     if (!price || isNaN(Number(price))) {
-      setErrorMessage('Внесете важечка цена.');
+      setErrorMessage('Please enter valid price.');
       return;
     }
 
     if (images.length === 0) {
-      setErrorMessage('Потребна е барем една фотографија.');
+      setErrorMessage('Please add at least one photo.');
       return;
     }
 
@@ -193,7 +195,6 @@ export default function EditProductPage() {
       updated_at: new Date().toISOString(),
     };
 
-    // Save immediately into client store
     saveClientProduct(updatedProduct);
     setProduct(updatedProduct);
 
@@ -217,13 +218,13 @@ export default function EditProductPage() {
       // client store already updated
     }
 
-    setSuccessMessage('Измените се успешно зачувани!');
+    setSuccessMessage(t('admin_saved_success'));
     setTimeout(() => setSuccessMessage(null), 3500);
     setIsSubmitting(false);
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Дали сте сигурни дека сакате да го избришете овој производ?`)) {
+    if (!window.confirm(`${t('admin_confirm_delete')}\n\n"${name}"`)) {
       return;
     }
     deleteClientProduct(productId);
@@ -240,22 +241,24 @@ export default function EditProductPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-paper flex items-center justify-center">
-        <p className="font-bold text-sm text-muted">Се вчитува...</p>
+        <p className="font-bold text-sm text-muted">{t('admin_checking')}</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-paper flex flex-col pb-16">
-      <AdminHeader title="ИЗМЕНИ ПРОИЗВОД" showBack backUrl="/admin/products" />
+      <AdminHeader title={t('admin_edit_header')} showBack backUrl="/admin/products" />
 
       <main className="max-w-xl mx-auto w-full p-4 sm:p-6 space-y-6">
-        <form onSubmit={handleSave} className="bg-white border border-ink/15 p-6 sm:p-8 space-y-6 shadow-sm">
+        <form onSubmit={handleSave} className="bg-white border border-black/10 p-6 sm:p-8 space-y-6 shadow-sm">
           {/* Active status & header */}
-          <div className="flex items-center justify-between pb-4 border-b border-ink/10">
+          <div className="flex items-center justify-between pb-4 border-b border-black/10">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted">Статус</span>
-              <h3 className="font-display text-2xl uppercase">{active ? 'Активен во продавница' : 'Скриен производ'}</h3>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted">{t('admin_visibility_status')}</span>
+              <h3 className="font-display text-2xl uppercase">
+                {active ? t('admin_status_active_store') : t('admin_status_hidden_store')}
+              </h3>
             </div>
 
             <button
@@ -268,20 +271,20 @@ export default function EditProductPage() {
               }`}
             >
               {active ? <Eye size={15} /> : <EyeOff size={15} />}
-              <span>{active ? 'Видлив' : 'Скриен'}</span>
+              <span>{active ? t('admin_status_visible') : t('admin_status_hidden')}</span>
             </button>
           </div>
 
           {/* 1. Photos */}
           <div className="space-y-3">
             <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-              Фотографии
+              {t('admin_photos_label')}
             </label>
 
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
               {images.map((url, idx) => (
-                <div key={idx} className="relative aspect-[3/4] bg-paper border border-ink/20 group">
-                  <Image src={url} alt={`Слика ${idx + 1}`} fill className="object-cover" />
+                <div key={idx} className="relative aspect-[3/4] bg-surface border border-black/10 group">
+                  <Image src={url} alt={`Photo ${idx + 1}`} fill className="object-cover" />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(idx)}
@@ -291,16 +294,16 @@ export default function EditProductPage() {
                   </button>
                   {idx === 0 && (
                     <span className="absolute bottom-1 left-1 right-1 bg-ink/80 text-white text-[9px] font-bold text-center uppercase py-0.5">
-                      Главна
+                      {t('admin_photo_main')}
                     </span>
                   )}
                 </div>
               ))}
 
-              <label className="relative aspect-[3/4] border-2 border-dashed border-ink/30 hover:border-retro-orange flex flex-col items-center justify-center cursor-pointer bg-paper hover:bg-white transition-colors p-2 text-center">
+              <label className="relative aspect-[3/4] border-2 border-dashed border-black/20 hover:border-retro-orange flex flex-col items-center justify-center cursor-pointer bg-surface hover:bg-white transition-colors p-2 text-center">
                 <Camera size={24} className="text-muted group-hover:text-retro-orange mb-1" />
                 <span className="text-[10px] font-bold uppercase tracking-wide text-ink">
-                  {isUploading ? 'Се прикачува...' : '+ Додај'}
+                  {isUploading ? t('admin_photo_uploading') : `+ ${t('admin_photo_upload')}`}
                 </span>
                 <input
                   type="file"
@@ -317,14 +320,14 @@ export default function EditProductPage() {
           {/* 2. Product Name */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-              Назив на производ
+              {t('admin_name_label')}
             </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-ink/20 bg-paper px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
+              className="w-full border border-black/10 bg-surface px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
             />
           </div>
 
@@ -332,16 +335,16 @@ export default function EditProductPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                Категорија
+                {t('admin_category_label')}
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category)}
-                className="w-full border border-ink/20 bg-paper px-3.5 py-2.5 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
+                className="w-full border border-black/10 bg-surface px-3.5 py-2.5 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat.key} value={cat.key}>
-                    {cat.labelMk}
+                    {getCategoryText(cat.key)}
                   </option>
                 ))}
               </select>
@@ -349,7 +352,7 @@ export default function EditProductPage() {
 
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                Цена (den.)
+                {t('admin_price_label')}
               </label>
               <input
                 type="number"
@@ -357,32 +360,32 @@ export default function EditProductPage() {
                 min="0"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full border border-ink/20 bg-paper px-3.5 py-2.5 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
+                className="w-full border border-black/10 bg-surface px-3.5 py-2.5 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
               />
             </div>
           </div>
 
-          {/* 4. Simple Stock Controls (Maria's Core Flow) */}
+          {/* 4. Stock Controls */}
           <div className="space-y-3 pt-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-              Залиха по големини
+              {t('admin_sizes_label')}
             </label>
 
-            <div className="space-y-2.5 bg-paper p-3.5 border border-ink/10">
+            <div className="space-y-2.5 bg-surface p-3.5 border border-black/10">
               {variants.map((v, idx) => {
                 const available = Math.max(0, v.stock_quantity - v.reserved_quantity);
 
                 return (
-                  <div key={idx} className="bg-white p-3 border border-ink/10 space-y-2">
+                  <div key={idx} className="bg-white p-3 border border-black/10 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="font-bold text-base text-ink w-10">{v.size}</span>
                         <div className="text-[11px] text-muted space-x-2">
-                          <span>Физичка: <strong className="text-ink">{v.stock_quantity}</strong></span>
+                          <span>Physical: <strong className="text-ink">{v.stock_quantity}</strong></span>
                           <span>·</span>
-                          <span>Резервирано: <strong className="text-retro-orange">{v.reserved_quantity}</strong></span>
+                          <span>Reserved: <strong className="text-retro-orange">{v.reserved_quantity}</strong></span>
                           <span>·</span>
-                          <span>Достапно: <strong className="text-emerald-700 font-bold">{available}</strong></span>
+                          <span>Avail: <strong className="text-emerald-700 font-bold">{available}</strong></span>
                         </div>
                       </div>
 
@@ -392,7 +395,7 @@ export default function EditProductPage() {
                           type="button"
                           onClick={() => handleStockDelta(idx, -1)}
                           disabled={v.stock_quantity <= v.reserved_quantity}
-                          className="w-8 h-8 bg-paper hover:bg-ink hover:text-white border border-ink/20 font-bold text-base flex items-center justify-center disabled:opacity-40 transition-colors"
+                          className="w-8 h-8 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-base flex items-center justify-center disabled:opacity-40 transition-colors"
                         >
                           -
                         </button>
@@ -406,12 +409,12 @@ export default function EditProductPage() {
                               prev.map((item, i) => (i === idx ? { ...item, stock_quantity: val } : item))
                             );
                           }}
-                          className="w-12 text-center font-bold text-sm bg-paper border border-ink/20 py-1"
+                          className="w-12 text-center font-bold text-sm bg-surface border border-black/10 py-1"
                         />
                         <button
                           type="button"
                           onClick={() => handleStockDelta(idx, 1)}
-                          className="w-8 h-8 bg-paper hover:bg-ink hover:text-white border border-ink/20 font-bold text-base flex items-center justify-center transition-colors"
+                          className="w-8 h-8 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-base flex items-center justify-center transition-colors"
                         >
                           +
                         </button>
@@ -425,17 +428,17 @@ export default function EditProductPage() {
               <div className="flex gap-2 pt-2">
                 <input
                   type="text"
-                  placeholder="Додај нова големина (пр. 38)"
+                  placeholder={t('admin_size_custom_placeholder')}
                   value={customSize}
                   onChange={(e) => setCustomSize(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-ink/20"
+                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-black/10"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomSize}
-                  className="px-3 py-1.5 bg-ink text-white hover:bg-retro-orange hover:text-ink text-xs font-bold uppercase transition-colors"
+                  className="px-3 py-1.5 bg-ink text-white hover:bg-retro-orange hover:text-white text-xs font-bold uppercase transition-colors"
                 >
-                  Додај
+                  {t('admin_size_custom_btn')}
                 </button>
               </div>
             </div>
@@ -444,13 +447,13 @@ export default function EditProductPage() {
           {/* 5. Description */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-              Опис
+              {t('admin_desc_label')}
             </label>
             <textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full border border-ink/20 bg-paper p-3 text-sm text-ink focus:outline-none focus:border-ink rounded-none"
+              className="w-full border border-black/10 bg-surface p-3 text-sm text-ink focus:outline-none focus:border-ink rounded-none"
             />
           </div>
 
@@ -477,7 +480,7 @@ export default function EditProductPage() {
             }`}
           >
             <Check size={18} />
-            <span>{isSubmitting ? 'Се зачувува...' : 'Зачувај измени'}</span>
+            <span>{isSubmitting ? t('admin_saving') : t('admin_btn_save')}</span>
           </button>
 
           {/* Delete Product */}
@@ -488,7 +491,7 @@ export default function EditProductPage() {
               className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-600 hover:text-red-700 transition-colors py-2 px-3"
             >
               <Trash2 size={15} />
-              <span>Избриши го овој производ</span>
+              <span>{t('admin_delete_product_btn')}</span>
             </button>
           </div>
         </form>

@@ -6,8 +6,10 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Reservation, ReservationStatus } from '@/types/database';
 import { formatPrice, formatDate, formatTimeRemaining, STATUS_MAP } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export default function AdminReservationsPage() {
+  const { t } = useLanguage();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [activeTab, setActiveTab] = useState<ReservationStatus | 'all'>('new');
   const [loading, setLoading] = useState(true);
@@ -59,8 +61,8 @@ export default function AdminReservationsPage() {
         reservationId: reservation.id,
         reservationNumber: reservation.reservation_number,
         targetStatus: 'picked_up',
-        title: 'Потврди подигнување',
-        description: `Потврди дека купувачот ${reservation.customer_name} го подигна и плати производот (${formatPrice(reservation.total)})? Физичката залиха ќе биде автоматски намалена.`,
+        title: t('admin_res_btn_picked_up'),
+        description: `Confirm that customer ${reservation.customer_name} picked up and paid for ${formatPrice(reservation.total)}?`,
       });
       return;
     }
@@ -71,8 +73,8 @@ export default function AdminReservationsPage() {
         reservationId: reservation.id,
         reservationNumber: reservation.reservation_number,
         targetStatus: 'cancelled',
-        title: 'Откажи резервација',
-        description: `Дали сте сигурни дека сакате да ја откажете резервацијата ${reservation.reservation_number}? Резервираните парчиња ќе бидат вратени во слободна достапна залиха.`,
+        title: t('admin_res_btn_cancel'),
+        description: `Cancel reservation ${reservation.reservation_number}? Reserved pieces will be released back to inventory.`,
       });
       return;
     }
@@ -96,10 +98,10 @@ export default function AdminReservationsPage() {
           prev.map((r) => (r.id === reservationId ? { ...r, status: newStatus } : r))
         );
       } else {
-        alert(data.error || 'Грешка при ажурирање на статусот.');
+        alert(data.error || 'Error updating status.');
       }
     } catch (err: any) {
-      alert(err.message || 'Се појави неочекувана грешка.');
+      alert(err.message || 'Unexpected error.');
     } finally {
       setProcessingId(null);
       setActionModal(null);
@@ -120,22 +122,22 @@ export default function AdminReservationsPage() {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col pb-16">
-      <AdminHeader title="РЕЗЕРВАЦИИ" showBack backUrl="/admin" />
+      <AdminHeader title={t('admin_res_header')} showBack backUrl="/admin" />
 
       <main className="max-w-2xl mx-auto w-full p-4 sm:p-6 space-y-4">
         {/* Refresh & Tabs Header */}
         <div className="flex items-center justify-between pb-1">
           <h2 className="font-display text-2xl uppercase tracking-wider text-ink">
-            Преглед на нарачки
+            {t('admin_res_orders_overview')}
           </h2>
           <button
             onClick={fetchReservations}
             disabled={loading}
-            className="p-2 bg-white border border-ink/15 hover:border-ink rounded text-ink flex items-center gap-1 text-xs font-bold transition-colors"
-            title="Освежи"
+            className="p-2 bg-white border border-black/10 hover:border-ink rounded text-ink flex items-center gap-1 text-xs font-bold transition-colors"
+            title={t('admin_res_refresh')}
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            <span>Освежи</span>
+            <span>{t('admin_res_refresh')}</span>
           </button>
         </div>
 
@@ -144,11 +146,11 @@ export default function AdminReservationsPage() {
           <button
             onClick={() => setActiveTab('new')}
             className={`py-2.5 px-2 border text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1 ${
-              activeTab === 'new' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-ink/15'
+              activeTab === 'new' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-black/10'
             }`}
           >
-            <span>Нови</span>
-            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'new' ? 'bg-retro-orange text-ink font-extrabold' : 'bg-amber-100 text-amber-900'}`}>
+            <span>{t('admin_res_tab_new')}</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'new' ? 'bg-retro-orange text-white font-extrabold' : 'bg-amber-100 text-amber-900'}`}>
               {tabCounts.new}
             </span>
           </button>
@@ -156,10 +158,10 @@ export default function AdminReservationsPage() {
           <button
             onClick={() => setActiveTab('ready')}
             className={`py-2.5 px-2 border text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1 ${
-              activeTab === 'ready' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-ink/15'
+              activeTab === 'ready' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-black/10'
             }`}
           >
-            <span>Подготвени</span>
+            <span>{t('admin_res_tab_ready')}</span>
             <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'ready' ? 'bg-white text-ink font-bold' : 'bg-blue-100 text-blue-900'}`}>
               {tabCounts.ready}
             </span>
@@ -168,10 +170,10 @@ export default function AdminReservationsPage() {
           <button
             onClick={() => setActiveTab('picked_up')}
             className={`py-2.5 px-2 border text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1 ${
-              activeTab === 'picked_up' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-ink/15'
+              activeTab === 'picked_up' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-black/10'
             }`}
           >
-            <span>Подигнати</span>
+            <span>{t('admin_res_tab_picked_up')}</span>
             <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'picked_up' ? 'bg-white text-ink font-bold' : 'bg-emerald-100 text-emerald-900'}`}>
               {tabCounts.picked_up}
             </span>
@@ -180,10 +182,10 @@ export default function AdminReservationsPage() {
           <button
             onClick={() => setActiveTab('cancelled')}
             className={`py-2.5 px-2 border text-center transition-all flex flex-col sm:flex-row items-center justify-center gap-1 ${
-              activeTab === 'cancelled' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-ink/15'
+              activeTab === 'cancelled' ? 'bg-ink text-white border-ink shadow-sm' : 'bg-white text-ink border-black/10'
             }`}
           >
-            <span>Откажани</span>
+            <span>{t('admin_res_tab_cancelled')}</span>
             <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${activeTab === 'cancelled' ? 'bg-white text-ink font-bold' : 'bg-zinc-100 text-zinc-700'}`}>
               {tabCounts.cancelled}
             </span>
@@ -201,11 +203,11 @@ export default function AdminReservationsPage() {
               <div
                 key={res.id}
                 className={`bg-white border p-5 space-y-4 shadow-sm transition-all ${
-                  res.status === 'new' ? 'border-amber-400/80 ring-1 ring-amber-300' : 'border-ink/15'
+                  res.status === 'new' ? 'border-amber-400/80 ring-1 ring-amber-300' : 'border-black/10'
                 }`}
               >
                 {/* Card Top: Number, Date, Status */}
-                <div className="flex items-start justify-between gap-3 border-b border-ink/10 pb-3">
+                <div className="flex items-start justify-between gap-3 border-b border-black/10 pb-3">
                   <div>
                     <span className="font-display text-2xl text-retro-orange tracking-wider font-bold">
                       {res.reservation_number}
@@ -227,14 +229,14 @@ export default function AdminReservationsPage() {
                         }`}
                       >
                         <Clock size={11} />
-                        <span>{timeInfo.isExpired ? 'Истечена!' : `Истекува за: ${timeInfo.formatted}`}</span>
+                        <span>{timeInfo.isExpired ? t('admin_res_expired') : t('admin_res_expires_in', { time: timeInfo.formatted })}</span>
                       </span>
                     )}
                   </div>
                 </div>
 
                 {/* Customer Details */}
-                <div className="bg-paper p-3 border border-ink/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="bg-surface p-3 border border-black/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <span className="text-xs font-bold text-ink block">{res.customer_name}</span>
                     {res.customer_email && (
@@ -244,7 +246,7 @@ export default function AdminReservationsPage() {
 
                   <a
                     href={`tel:${res.customer_phone}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-ink/20 hover:border-ink text-ink font-bold text-xs rounded transition-colors self-start sm:self-auto"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-black/10 hover:border-ink text-ink font-bold text-xs rounded transition-colors self-start sm:self-auto"
                   >
                     <Phone size={13} className="text-retro-orange" />
                     <span>{res.customer_phone}</span>
@@ -254,14 +256,14 @@ export default function AdminReservationsPage() {
                 {/* Reservation Items */}
                 <div className="space-y-1.5">
                   <span className="text-[10px] uppercase font-bold tracking-wider text-muted block">
-                    Производи:
+                    {t('admin_res_items_label')}
                   </span>
-                  <div className="space-y-1 divide-y divide-ink/5">
+                  <div className="space-y-1 divide-y divide-black/[0.04]">
                     {res.items?.map((item) => (
                       <div key={item.id} className="pt-1.5 flex items-center justify-between text-xs">
                         <div className="font-semibold text-ink">
                           <span>{item.product_name}</span>
-                          <span className="ml-2 px-1.5 py-0.5 bg-paper border border-ink/10 text-[11px] font-bold">
+                          <span className="ml-2 px-1.5 py-0.5 bg-surface border border-black/10 text-[11px] font-bold">
                             {item.size}
                           </span>
                           <span className="ml-2 text-muted">× {item.quantity}</span>
@@ -273,9 +275,9 @@ export default function AdminReservationsPage() {
                 </div>
 
                 {/* Total & Action Buttons */}
-                <div className="pt-3 border-t border-ink/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="pt-3 border-t border-black/10 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="w-full sm:w-auto text-left">
-                    <span className="text-[10px] uppercase text-muted tracking-wider block">Вкупно:</span>
+                    <span className="text-[10px] uppercase text-muted tracking-wider block">{t('admin_res_total_label')}</span>
                     <span className="font-display text-2xl text-ink font-bold leading-none">
                       {formatPrice(res.total)}
                     </span>
@@ -291,7 +293,7 @@ export default function AdminReservationsPage() {
                           className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5"
                         >
                           <PackageCheck size={15} />
-                          <span>Подготвено</span>
+                          <span>{t('admin_res_btn_ready')}</span>
                         </button>
                       )}
 
@@ -301,17 +303,17 @@ export default function AdminReservationsPage() {
                         className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-ink hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <CheckCircle size={15} className="text-retro-orange" />
-                        <span>Подигнато</span>
+                        <span>{t('admin_res_btn_picked_up')}</span>
                       </button>
 
                       <button
                         onClick={() => handleActionClick(res, 'cancelled')}
                         disabled={processingId === res.id}
                         className="px-3 py-2.5 border border-red-200 hover:bg-red-50 text-red-600 font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-1"
-                        title="Откажи"
+                        title={t('admin_res_btn_cancel')}
                       >
                         <XCircle size={15} />
-                        <span className="hidden sm:inline">Откажи</span>
+                        <span className="hidden sm:inline">{t('admin_res_btn_cancel')}</span>
                       </button>
                     </div>
                   )}
@@ -321,20 +323,20 @@ export default function AdminReservationsPage() {
           })}
 
           {displayedReservations.length === 0 && !loading && (
-            <div className="bg-white border border-ink/10 p-12 text-center text-xs text-muted space-y-2">
-              <p className="font-bold text-sm text-ink">Нема резервации во оваа категорија.</p>
-              <p>Сите нови резервации од купувачите ќе се појават тука веднаш.</p>
+            <div className="bg-white border border-black/10 p-12 text-center text-xs text-muted space-y-2">
+              <p className="font-bold text-sm text-ink">{t('admin_res_empty_title')}</p>
+              <p>{t('admin_res_empty_desc')}</p>
             </div>
           )}
         </div>
       </main>
 
-      {/* Confirmation Modal for Destructive/Stock Actions */}
+      {/* Confirmation Modal */}
       {actionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white border border-ink/20 p-6 max-w-sm w-full space-y-4 shadow-2xl">
+          <div className="bg-white border border-black/20 p-6 max-w-sm w-full space-y-4 shadow-2xl">
             <div className="flex items-center gap-3 text-ink">
-              <div className="w-10 h-10 rounded-full bg-paper flex items-center justify-center text-retro-orange shrink-0">
+              <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-retro-orange shrink-0">
                 <AlertTriangle size={22} />
               </div>
               <h3 className="font-display text-2xl uppercase tracking-wide">{actionModal.title}</h3>
@@ -348,9 +350,9 @@ export default function AdminReservationsPage() {
               <button
                 type="button"
                 onClick={() => setActionModal(null)}
-                className="px-4 py-2 border border-ink/20 text-xs font-bold uppercase tracking-wider hover:bg-paper"
+                className="px-4 py-2 border border-black/20 text-xs font-bold uppercase tracking-wider hover:bg-surface"
               >
-                Назад
+                {t('admin_res_modal_back')}
               </button>
 
               <button
@@ -362,7 +364,7 @@ export default function AdminReservationsPage() {
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                Потврди
+                {t('admin_res_modal_confirm')}
               </button>
             </div>
           </div>
