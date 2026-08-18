@@ -17,13 +17,11 @@ export function AdminHeader({ title = 'RETRO ADMIN', showBack = false, backUrl =
   const router = useRouter();
   const supabase = createClient();
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // ignore
-    }
-    router.push('/admin/login');
+  const handleLogout = () => {
+    localStorage.removeItem('retro_admin_auth');
+    sessionStorage.removeItem('retro_admin_auth');
+    document.cookie = 'retro_admin_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    router.replace('/admin/login');
   };
 
   return (
