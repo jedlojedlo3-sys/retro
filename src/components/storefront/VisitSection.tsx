@@ -64,7 +64,7 @@ export function VisitSection() {
             </div>
 
             <a
-              href="https://www.google.com/maps/search/?api=1&query=Stiv+Naumov+8+Prilep+North+Macedonia"
+              href="https://www.google.com/maps/dir/?api=1&destination=Stiv+Naumov+8,+Prilep,+Macedonia&travelmode=driving"
               target="_blank"
               rel="noopener noreferrer"
               className="group mt-8 inline-flex items-center justify-between w-full py-4 px-5 border border-white/15 hover:border-white/40 hover:bg-white/5 text-white text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-300"

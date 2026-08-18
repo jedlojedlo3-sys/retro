@@ -172,7 +172,7 @@ export function ReserveModal({
             {/* Action buttons */}
             <div className="space-y-2 pt-1">
               <a
-                href="https://www.google.com/maps/search/?api=1&query=Stiv+Naumov+8+Prilep+North+Macedonia"
+                href="https://www.google.com/maps/dir/?api=1&destination=Stiv+Naumov+8,+Prilep,+Macedonia&travelmode=driving"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 bg-ink text-white hover:bg-retro-orange text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2"

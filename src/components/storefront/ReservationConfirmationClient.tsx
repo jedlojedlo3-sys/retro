@@ -75,7 +75,7 @@ export function ReservationConfirmationClient({ number }: ReservationConfirmatio
       {/* Action Buttons */}
       <div className="pt-4 border-t border-ink/10 flex flex-col sm:flex-row items-center justify-between gap-4">
         <a
-          href="https://www.google.com/maps/search/?api=1&query=Stiv+Naumov+8+Prilep+North+Macedonia"
+          href="https://www.google.com/maps/dir/?api=1&destination=Stiv+Naumov+8,+Prilep,+Macedonia&travelmode=driving"
           target="_blank"
           rel="noopener noreferrer"
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-ink text-white hover:bg-retro-orange hover:text-ink font-bold text-xs uppercase tracking-wider transition-colors"
