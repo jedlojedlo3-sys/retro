@@ -1,7 +1,22 @@
 import type { Metadata } from 'next';
+import { Inter, Bebas_Neue } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { MobileBottomNav } from '@/components/storefront/MobileBottomNav';
+
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const bebasNeue = Bebas_Neue({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://retro-boutique.vercel.app'),
@@ -51,14 +66,14 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="mk">
+    <html lang="mk" className={`${inter.variable} ${bebasNeue.variable}`}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-paper text-ink selection:bg-retro-orange selection:text-white pb-16 md:pb-0">
+      <body className={`${inter.className} min-h-screen flex flex-col bg-paper text-ink selection:bg-retro-orange selection:text-white pb-16 md:pb-0 font-sans`}>
         <LanguageProvider>
           {children}
           <MobileBottomNav />
