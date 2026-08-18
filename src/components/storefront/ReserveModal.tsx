@@ -97,9 +97,45 @@ export function ReserveModal({
       }
 
       // Smooth in-place success screen (no jarring page redirect!)
+      const resNumber = data.data?.reservation_number || `RB-${Math.floor(1000 + Math.random() * 9000)}`;
       setReservationSuccess({
-        reservationNumber: data.data.reservation_number || `RB-${Math.floor(1000 + Math.random() * 9000)}`,
+        reservationNumber: resNumber,
       });
+
+      // Save to local reservations storage
+      try {
+        const { saveClientReservation } = await import('@/lib/reservations-store');
+        saveClientReservation({
+          id: data.data?.id || `res-${Date.now()}`,
+          reservation_number: resNumber,
+          customer_name: customerName.trim(),
+          customer_phone: customerPhone.trim(),
+          customer_email: null,
+          status: 'new',
+          total: product.price,
+          expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+          email_sent: false,
+          email_error: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          items: [
+            {
+              id: `item-${Date.now()}`,
+              reservation_id: data.data?.id || `res-${Date.now()}`,
+              product_id: product.id,
+              variant_id: selectedVariantId || null,
+              product_name: product.name,
+              size: currentVariant?.size || 'Standard',
+              quantity: 1,
+              price: product.price,
+              line_total: product.price,
+              created_at: new Date().toISOString(),
+            },
+          ],
+        });
+      } catch (e) {
+        // ignore
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Грешка при резервација. Обидете се повторно.');
     } finally {

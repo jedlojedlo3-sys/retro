@@ -5,8 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, Shirt, ClipboardList, LogOut, Bell, ExternalLink, Globe } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { Reservation } from '@/types/database';
+import { getClientStoredReservations } from '@/lib/reservations-store';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -17,15 +18,24 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const supabase = createClient();
-        const { count, error } = await supabase
-          .from('reservations')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'new');
-
-        if (!error && count !== null) {
-          setNewReservationsCount(count);
+        const res = await fetch('/api/admin/reservations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            const count = (data.data as Reservation[]).filter((r) => r.status === 'new').length;
+            setNewReservationsCount(count);
+            return;
+          }
         }
+      } catch {
+        // ignore
+      }
+
+      // Local fallback
+      try {
+        const local = getClientStoredReservations();
+        const count = local.filter((r) => r.status === 'new').length;
+        setNewReservationsCount(count);
       } catch {
         // ignore
       } finally {

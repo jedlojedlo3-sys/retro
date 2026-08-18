@@ -26,17 +26,36 @@ export default function AdminReservationsPage() {
   const fetchReservations = async () => {
     setLoading(true);
     try {
+      const res = await fetch('/api/admin/reservations');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setReservations(json.data as Reservation[]);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('reservations')
         .select('*, items:reservation_items(*)')
         .order('created_at', { ascending: false });
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setReservations(data as Reservation[]);
+      } else {
+        // Fallback to local browser storage
+        const { getClientStoredReservations } = await import('@/lib/reservations-store');
+        setReservations(getClientStoredReservations());
       }
     } catch {
-      // ignore
+      const { getClientStoredReservations } = await import('@/lib/reservations-store');
+      setReservations(getClientStoredReservations());
     } finally {
       setLoading(false);
     }
