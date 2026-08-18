@@ -1,28 +1,32 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Clock, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { Product } from '@/types/database';
 import { formatPrice } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { ReserveModal } from './ReserveModal';
-import { getClientProductById } from '@/lib/products-store';
+import { ProductCard } from './ProductCard';
+import { getClientProductById, getClientProducts } from '@/lib/products-store';
+import { FALLBACK_DEMO_PRODUCTS } from '@/lib/mock-data';
 
 interface ProductDetailClientProps {
   product: Product;
 }
 
 export function ProductDetailClient({ product: initialProduct }: ProductDetailClientProps) {
-  const { t, getCategoryText } = useLanguage();
+  const { t, getCategoryText, language } = useLanguage();
   const [product, setProduct] = useState<Product>(initialProduct);
+  const [allProducts, setAllProducts] = useState<Product[]>(FALLBACK_DEMO_PRODUCTS);
 
   useEffect(() => {
     const updated = getClientProductById(initialProduct.id, initialProduct);
     if (updated) {
       setProduct(updated);
     }
+    setAllProducts(getClientProducts(FALLBACK_DEMO_PRODUCTS));
   }, [initialProduct]);
 
   const allImages = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
@@ -44,8 +48,20 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
   ) ?? 0;
   const isOutOfStock = totalAvailable <= 0;
 
+  // Related products (same category or newest, excluding current)
+  const relatedProducts = useMemo(() => {
+    return allProducts
+      .filter((p) => p.id !== product.id && p.active !== false)
+      .sort((a, b) => {
+        if (a.category === product.category && b.category !== product.category) return -1;
+        if (a.category !== product.category && b.category === product.category) return 1;
+        return 0;
+      })
+      .slice(0, 4);
+  }, [allProducts, product]);
+
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 pb-16 sm:pb-8">
       {/* Back Button */}
       <div>
         <Link
@@ -58,7 +74,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
         {/* Left Column: Image Gallery */}
         <div className="lg:col-span-7 space-y-4">
           {/* Main Large Image */}
@@ -68,7 +84,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
               alt={product.name}
               fill
               priority
-              className="object-cover object-center"
+              className="object-cover object-center transition-all duration-300"
               sizes="(max-width: 1024px) 100vw, 60vw"
             />
 
@@ -89,7 +105,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
             )}
           </div>
 
-          {/* Thumbnails (if multiple images) */}
+          {/* Thumbnails */}
           {allImages.length > 1 && (
             <div className="flex gap-3 overflow-x-auto pb-2">
               {allImages.map((imgUrl, index) => (
@@ -108,7 +124,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
         </div>
 
         {/* Right Column: Product Information & Size Picker */}
-        <div className="lg:col-span-5 space-y-8 bg-white border border-ink/10 p-6 sm:p-8">
+        <div className="lg:col-span-5 space-y-6 bg-white border border-ink/10 p-6 sm:p-8 shadow-sm">
           <div className="space-y-2 border-b border-ink/10 pb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -174,7 +190,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
               )}
             </div>
 
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2.5">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {product.variants?.map((variant) => {
                 const avail = Math.max(0, variant.stock_quantity - variant.reserved_quantity);
                 const isAvailable = avail > 0;
@@ -190,7 +206,7 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                       isSelected
                         ? 'border-ink bg-ink text-white shadow-md ring-1 ring-ink'
                         : isAvailable
-                        ? 'border-ink/20 bg-paper-light text-ink hover:border-ink'
+                        ? 'border-black/15 bg-paper text-ink hover:border-ink'
                         : 'border-zinc-200 bg-zinc-100 text-zinc-400 line-through cursor-not-allowed'
                     }`}
                   >
@@ -205,17 +221,18 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
           </div>
 
           {/* Main Action Button */}
-          <div className="pt-4 space-y-3">
+          <div className="pt-2 space-y-3">
             <button
               onClick={() => setIsReserveModalOpen(true)}
               disabled={isOutOfStock || !selectedVariantId}
-              className={`w-full py-4 px-6 text-center font-bold text-sm uppercase tracking-wider transition-all transform hover:-translate-y-0.5 shadow-md ${
+              className={`w-full py-4 px-6 text-center font-bold text-xs uppercase tracking-wider transition-all transform hover:-translate-y-0.5 shadow-md flex items-center justify-center gap-2 ${
                 isOutOfStock || !selectedVariantId
                   ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
-                  : 'bg-ink text-white hover:bg-retro-orange hover:text-ink'
+                  : 'bg-ink text-white hover:bg-retro-orange'
               }`}
             >
-              {isOutOfStock ? t('btn_no_stock_detail') : t('btn_reserve_store')}
+              <ShoppingBag size={16} />
+              <span>{isOutOfStock ? t('btn_no_stock_detail') : t('btn_reserve_store')}</span>
             </button>
 
             <p className="text-[11px] text-center text-muted">
@@ -234,21 +251,79 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
           )}
 
           {/* Store Guarantees */}
-          <div className="pt-6 border-t border-ink/10 space-y-3 text-xs text-ink/80">
+          <div className="pt-6 border-t border-ink/10 space-y-2.5 text-xs text-ink/80">
             <div className="flex items-center gap-2">
-              <MapPin size={16} className="text-retro-orange shrink-0" />
+              <MapPin size={15} className="text-retro-orange shrink-0" />
               <span>{t('guarantee_location')}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Clock size={16} className="text-retro-orange shrink-0" />
+              <Clock size={15} className="text-retro-orange shrink-0" />
               <span>{t('guarantee_hours')}</span>
             </div>
             <div className="flex items-center gap-2">
-              <ShieldCheck size={16} className="text-retro-orange shrink-0" />
+              <ShieldCheck size={15} className="text-retro-orange shrink-0" />
               <span>{t('guarantee_fitting')}</span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Related Boutique Items (Cross-Sell / Discovery) ─────────────────────────── */}
+      {relatedProducts.length > 0 && (
+        <div className="pt-10 border-t border-black/10 space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-retro-orange block">
+                RETRO PRILEP
+              </span>
+              <h3 className="font-display text-2xl sm:text-3xl uppercase text-ink">
+                {language === 'mk' ? 'Слични парчиња од колекцијата' : 'You May Also Like'}
+              </h3>
+            </div>
+
+            <Link
+              href="/products"
+              className="text-xs font-bold uppercase tracking-wider text-ink hover:text-retro-orange transition-colors"
+            >
+              {language === 'mk' ? 'Сите модели →' : 'View All →'}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
+            {relatedProducts.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Sticky Mobile Bottom Quick-Reserve Bar ────────────────────────────── */}
+      <div className="sm:hidden fixed bottom-14 inset-x-0 bg-white/95 backdrop-blur-md border-t border-black/10 p-3 z-30 flex items-center justify-between gap-3 shadow-lg">
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-bold text-ink truncate">{product.name}</p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-display text-base text-retro-orange font-bold">
+              {formatPrice(product.price)}
+            </span>
+            {selectedVariant && (
+              <span className="text-[10px] text-muted font-bold">
+                · Големина: {selectedVariant.size}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsReserveModalOpen(true)}
+          disabled={isOutOfStock}
+          className={`py-2.5 px-4 text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+            isOutOfStock
+              ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+              : 'bg-ink text-white hover:bg-retro-orange active:scale-95 shadow-sm'
+          }`}
+        >
+          {isOutOfStock ? t('sold_out') : t('btn_reserve')}
+        </button>
       </div>
 
       {/* Reserve Modal */}
