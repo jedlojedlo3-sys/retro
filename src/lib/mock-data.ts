@@ -10,6 +10,7 @@ export const FALLBACK_DEMO_PRODUCTS: Product[] = [
     image_url: '/assets/look-01.jpg',
     additional_images: ['/assets/store-01.jpg'],
     active: true,
+    is_new: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     variants: [
@@ -30,6 +31,7 @@ export const FALLBACK_DEMO_PRODUCTS: Product[] = [
     image_url: '/assets/store-02.jpg',
     additional_images: ['/assets/look-01.jpg'],
     active: true,
+    is_new: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     variants: [

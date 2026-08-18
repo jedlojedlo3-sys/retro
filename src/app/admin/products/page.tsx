@@ -63,6 +63,25 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleToggleNew = async (productId: string, currentNew?: boolean) => {
+    const target = products.find((p) => p.id === productId);
+    if (!target) return;
+
+    const updatedProduct = { ...target, is_new: !currentNew };
+    saveClientProduct(updatedProduct);
+
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? updatedProduct : p))
+    );
+
+    try {
+      const supabase = createClient();
+      await supabase.from('products').update({ is_new: !currentNew }).eq('id', productId);
+    } catch {
+      // ignore
+    }
+  };
+
   const handleDeleteProduct = async (productId: string, productName: string) => {
     if (!window.confirm(`${t('admin_confirm_delete')}\n\n"${productName}"`)) {
       return;
@@ -175,6 +194,11 @@ export default function AdminProductsPage() {
                       <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-surface text-muted border border-black/10">
                         {getCategoryText(product.category)}
                       </span>
+                      {product.is_new && (
+                        <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-retro-orange text-white">
+                          NEW ⭐
+                        </span>
+                      )}
                       {!product.active && (
                         <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-zinc-200 text-zinc-600">
                           {t('admin_status_hidden')}
@@ -197,6 +221,18 @@ export default function AdminProductsPage() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    onClick={() => handleToggleNew(product.id, product.is_new)}
+                    className={`p-2 border transition-colors ${
+                      product.is_new
+                        ? 'border-retro-orange bg-retro-orange/10 text-retro-orange'
+                        : 'border-black/10 hover:border-retro-orange text-muted hover:text-retro-orange'
+                    }`}
+                    title={product.is_new ? 'Remove NEW flag' : 'Mark as NEW'}
+                  >
+                    ⭐
+                  </button>
+
                   <button
                     onClick={() => handleToggleActive(product.id, product.active)}
                     className="p-2 border border-black/10 hover:border-ink text-ink transition-colors"

@@ -24,6 +24,7 @@ export default function EditProductPage() {
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
   const [active, setActive] = useState(true);
+  const [isNew, setIsNew] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [customSize, setCustomSize] = useState('');
@@ -44,6 +45,7 @@ export default function EditProductPage() {
         setPrice(String(clientProd.price));
         setDescription(clientProd.description || '');
         setActive(clientProd.active);
+        setIsNew(clientProd.is_new ?? false);
         setImages([clientProd.image_url, ...(clientProd.additional_images || [])].filter(Boolean));
         setVariants(
           (clientProd.variants || []).sort((a, b) => a.display_order - b.display_order)
@@ -71,6 +73,7 @@ export default function EditProductPage() {
           setPrice(String(prod.price));
           setDescription(prod.description || '');
           setActive(prod.active);
+          setIsNew(prod.is_new ?? false);
           setImages([prod.image_url, ...(prod.additional_images || [])].filter(Boolean));
           setVariants(
             (prod.variants || []).sort((a, b) => a.display_order - b.display_order)
@@ -85,6 +88,7 @@ export default function EditProductPage() {
           setPrice(String(demo.price));
           setDescription(demo.description || '');
           setActive(demo.active);
+          setIsNew(demo.is_new ?? false);
           setImages([demo.image_url, ...(demo.additional_images || [])]);
           setVariants(demo.variants || []);
         }
@@ -191,6 +195,7 @@ export default function EditProductPage() {
       additional_images: images.slice(1),
       variants,
       active,
+      is_new: isNew,
       created_at: product?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -212,6 +217,7 @@ export default function EditProductPage() {
           additional_images: images.slice(1),
           variants,
           active,
+          is_new: isNew,
         }),
       });
     } catch {
@@ -252,27 +258,53 @@ export default function EditProductPage() {
 
       <main className="max-w-xl mx-auto w-full p-4 sm:p-6 space-y-6">
         <form onSubmit={handleSave} className="bg-white border border-black/10 p-6 sm:p-8 space-y-6 shadow-sm">
-          {/* Active status & header */}
-          <div className="flex items-center justify-between pb-4 border-b border-black/10">
-            <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted">{t('admin_visibility_status')}</span>
-              <h3 className="font-display text-2xl uppercase">
-                {active ? t('admin_status_active_store') : t('admin_status_hidden_store')}
-              </h3>
+          {/* Active status & NEW toggle header */}
+          <div className="space-y-3 pb-4 border-b border-black/10">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted">{t('admin_visibility_status')}</span>
+                <h3 className="font-display text-2xl uppercase">
+                  {active ? t('admin_status_active_store') : t('admin_status_hidden_store')}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActive(!active)}
+                className={`px-3 py-1.5 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${
+                  active
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                    : 'bg-zinc-100 text-zinc-600 border-zinc-300'
+                }`}
+              >
+                {active ? <Eye size={15} /> : <EyeOff size={15} />}
+                <span>{active ? t('admin_status_visible') : t('admin_status_hidden')}</span>
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setActive(!active)}
-              className={`px-3 py-1.5 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 border transition-colors ${
-                active
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                  : 'bg-zinc-100 text-zinc-600 border-zinc-300'
-              }`}
-            >
-              {active ? <Eye size={15} /> : <EyeOff size={15} />}
-              <span>{active ? t('admin_status_visible') : t('admin_status_hidden')}</span>
-            </button>
+            {/* NEW arrival toggle */}
+            <div className="p-3 bg-surface border border-black/10 flex items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-ink block">
+                  ⭐ {t('admin_is_new_label')}
+                </span>
+                <p className="text-[11px] text-muted mt-0.5">
+                  {t('admin_is_new_desc')}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsNew(!isNew)}
+                className={`px-3.5 py-1.5 font-bold text-xs uppercase tracking-wider border transition-all shrink-0 ${
+                  isNew
+                    ? 'bg-retro-orange text-white border-retro-orange shadow-sm'
+                    : 'bg-white text-muted border-black/10 hover:border-ink hover:text-ink'
+                }`}
+              >
+                {isNew ? t('admin_is_new_active') : t('admin_is_new_inactive')}
+              </button>
+            </div>
           </div>
 
           {/* 1. Photos */}

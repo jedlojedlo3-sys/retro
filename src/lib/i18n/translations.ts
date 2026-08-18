@@ -221,6 +221,10 @@ export const translations = {
     admin_status_active_store: 'Активен во продавница',
     admin_status_hidden_store: 'Скриен производ',
     admin_status_visible: 'Видлив',
+    admin_is_new_label: 'Ново пристигнување (NEW)',
+    admin_is_new_desc: 'Производот ќе биде означен со NEW и ќе се прикажува на врвот на каталогот.',
+    admin_is_new_active: 'Означено како НОВО',
+    admin_is_new_inactive: 'Не е означено',
 
     // ── Admin Reservations ────────────────────────────────
     admin_res_header: 'РЕЗЕРВАЦИИ',
@@ -462,6 +466,10 @@ export const translations = {
     admin_status_active_store: 'Active in store',
     admin_status_hidden_store: 'Hidden product',
     admin_status_visible: 'Visible',
+    admin_is_new_label: 'New Arrival (NEW)',
+    admin_is_new_desc: 'Product will be marked with NEW and appear at the top of the catalogue.',
+    admin_is_new_active: 'Marked as NEW',
+    admin_is_new_inactive: 'Not marked',
 
     // ── Admin Reservations ────────────────────────────────
     admin_res_header: 'RESERVATIONS',

@@ -42,12 +42,17 @@ export function ProductCard({ product }: ProductCardProps) {
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+            {product.is_new && !isOutOfStock && (
+              <span className="badge bg-retro-orange text-white font-extrabold tracking-wider animate-pulse">
+                NEW
+              </span>
+            )}
             {isOutOfStock && (
               <span className="badge bg-ink/80 text-white backdrop-blur-sm">
                 {t('sold_out')}
               </span>
             )}
-            {isLowStock && (
+            {isLowStock && !product.is_new && (
               <span className="badge bg-retro-orange text-white">
                 {t('only_x_left', { count: totalAvailable })}
               </span>

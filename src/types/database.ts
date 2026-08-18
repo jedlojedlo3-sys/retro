@@ -11,6 +11,7 @@ export interface Product {
   image_url: string;
   additional_images: string[];
   active: boolean;
+  is_new?: boolean;
   created_at: string;
   updated_at: string;
   variants?: ProductVariant[];

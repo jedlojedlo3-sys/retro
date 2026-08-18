@@ -26,6 +26,7 @@ export default function AddProductPage() {
   const [category, setCategory] = useState<Category>('jeans');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
+  const [isNew, setIsNew] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantInput[]>([
     { size: '30', stock_quantity: 2 },
@@ -148,6 +149,7 @@ export default function AddProductPage() {
       image_url: images[0],
       additional_images: images.slice(1),
       active: true,
+      is_new: isNew,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       variants: productVariants,
@@ -169,6 +171,7 @@ export default function AddProductPage() {
           additional_images: images.slice(1),
           variants,
           active: true,
+          is_new: isNew,
         }),
       });
     } catch {
@@ -391,6 +394,30 @@ export default function AddProductPage() {
               onChange={(e) => setDescription(e.target.value)}
               className="w-full border border-black/10 bg-surface p-3 text-sm text-ink focus:outline-none focus:border-ink rounded-none"
             />
+          </div>
+
+          {/* 6. Mark as NEW Flag */}
+          <div className="p-4 bg-surface border border-black/10 flex items-center justify-between gap-3">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-ink block">
+                ⭐ {t('admin_is_new_label')}
+              </span>
+              <p className="text-[11px] text-muted mt-0.5">
+                {t('admin_is_new_desc')}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsNew(!isNew)}
+              className={`px-3.5 py-2 font-bold text-xs uppercase tracking-wider border transition-all shrink-0 ${
+                isNew
+                  ? 'bg-retro-orange text-white border-retro-orange shadow-sm'
+                  : 'bg-white text-muted border-black/10 hover:border-ink hover:text-ink'
+              }`}
+            >
+              {isNew ? t('admin_is_new_active') : t('admin_is_new_inactive')}
+            </button>
           </div>
 
           {errorMessage && (

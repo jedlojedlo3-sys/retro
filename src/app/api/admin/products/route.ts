@@ -5,7 +5,7 @@ import { Category, Product } from '@/types/database';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, category, price, description, image_url, additional_images, variants, active } = body;
+    const { id, name, category, price, description, image_url, additional_images, variants, active, is_new } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ success: false, error: 'Името на производот е задолжително.' }, { status: 400 });
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
         image_url: image_url.trim(),
         additional_images: additional_images || [],
         active: active !== false,
+        is_new: Boolean(is_new),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         variants: Array.isArray(variants)
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, category, price, description, image_url, additional_images, variants, active } = body;
+    const { id, name, category, price, description, image_url, additional_images, variants, active, is_new } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
@@ -131,6 +132,7 @@ export async function PUT(request: NextRequest) {
         image_url: image_url?.trim() || '',
         additional_images: additional_images || [],
         active: active !== false,
+        is_new: Boolean(is_new),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         variants: Array.isArray(variants) ? variants : [],

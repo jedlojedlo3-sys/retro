@@ -8,7 +8,12 @@ const STORAGE_DELETED_KEY = 'retro_boutique_deleted_ids';
 
 export function getClientProducts(initialProducts: Product[] = []): Product[] {
   if (typeof window === 'undefined') {
-    return initialProducts.length > 0 ? initialProducts : FALLBACK_DEMO_PRODUCTS;
+    const base = initialProducts.length > 0 ? initialProducts : FALLBACK_DEMO_PRODUCTS;
+    return [...base].sort((a, b) => {
+      if (a.is_new && !b.is_new) return -1;
+      if (!a.is_new && b.is_new) return 1;
+      return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+    });
   }
 
   try {
@@ -29,9 +34,11 @@ export function getClientProducts(initialProducts: Product[] = []): Product[] {
       }
     });
 
-    return Array.from(productMap.values()).sort(
-      (a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
-    );
+    return Array.from(productMap.values()).sort((a, b) => {
+      if (a.is_new && !b.is_new) return -1;
+      if (!a.is_new && b.is_new) return 1;
+      return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+    });
   } catch {
     return initialProducts.length > 0 ? initialProducts : FALLBACK_DEMO_PRODUCTS;
   }
