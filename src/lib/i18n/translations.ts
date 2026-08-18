@@ -52,6 +52,8 @@ export const translations = {
     // Catalog controls
     search_placeholder: 'Пребарај производ...',
     only_in_stock: 'Само на залиха',
+    only_sale: '🔥 На попуст',
+    sale_badge: 'ПОПУСТ',
     sort_newest: 'Најново',
     sort_price_asc: 'Цена: Ниска → Висока',
     sort_price_desc: 'Цена: Висока → Ниска',
@@ -66,6 +68,7 @@ export const translations = {
     btn_details: 'Детали',
     btn_reserve: 'Резервирај',
     no_stock: 'Нема залиха',
+    save_amount: 'Заштеда: {amount} (-{percent}%)',
 
     // Product Detail
     back_to_catalog: 'Назад кон колекцијата',
@@ -187,6 +190,7 @@ export const translations = {
     admin_products_add_btn: 'Додај',
     admin_tab_all: 'Сите',
     admin_tab_active: 'Активни',
+    admin_tab_sale: '🔥 Попуст',
     admin_tab_hidden: 'Скриени',
     admin_status_hidden: 'Скриен',
     admin_stock_avail: 'Достапно: {count} пар.',
@@ -205,7 +209,9 @@ export const translations = {
     admin_name_label: '2. Назив на производ',
     admin_name_placeholder: 'Пр. Фармерки Slim Dark Blue',
     admin_category_label: '3. Категорија',
-    admin_price_label: '4. Цена (den.)',
+    admin_price_label: '4. Продажна цена (den.)',
+    admin_orig_price_label: 'Стара / редовна цена (опционално за попуст)',
+    admin_discount_percent_label: 'Попуст',
     admin_sizes_label: '5. Големини и залиха',
     admin_size_custom_placeholder: 'Додај друга големина (пр. 38, XXXL)',
     admin_size_custom_btn: 'Додај',
@@ -297,6 +303,8 @@ export const translations = {
     // Catalog controls
     search_placeholder: 'Search products...',
     only_in_stock: 'In stock only',
+    only_sale: '🔥 Sale',
+    sale_badge: 'SALE',
     sort_newest: 'Newest',
     sort_price_asc: 'Price: Low → High',
     sort_price_desc: 'Price: High → Low',
@@ -311,6 +319,7 @@ export const translations = {
     btn_details: 'Details',
     btn_reserve: 'Reserve',
     no_stock: 'Out of stock',
+    save_amount: 'Save: {amount} (-{percent}%)',
 
     // Product Detail
     back_to_catalog: 'Back to collection',
@@ -432,6 +441,7 @@ export const translations = {
     admin_products_add_btn: 'Add',
     admin_tab_all: 'All',
     admin_tab_active: 'Active',
+    admin_tab_sale: '🔥 Sale',
     admin_tab_hidden: 'Hidden',
     admin_status_hidden: 'Hidden',
     admin_stock_avail: 'Available: {count} pcs',
@@ -450,7 +460,9 @@ export const translations = {
     admin_name_label: '2. Product Name',
     admin_name_placeholder: 'E.g. Slim Fit Denim Dark Blue',
     admin_category_label: '3. Category',
-    admin_price_label: '4. Price (den.)',
+    admin_price_label: '4. Selling Price (den.)',
+    admin_orig_price_label: 'Original / Regular Price (optional for discount)',
+    admin_discount_percent_label: 'Discount',
     admin_sizes_label: '5. Sizes & Stock',
     admin_size_custom_placeholder: 'Add another size (e.g. 38, XXXL)',
     admin_size_custom_btn: 'Add',

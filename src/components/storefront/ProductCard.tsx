@@ -22,6 +22,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const isOutOfStock = totalAvailable <= 0;
   const isLowStock = !isOutOfStock && totalAvailable <= 2;
+  const hasDiscount = Boolean(product.original_price && product.original_price > product.price);
+  const discountPercent = hasDiscount
+    ? Math.round((((product.original_price || 0) - product.price) / (product.original_price || 1)) * 100)
+    : 0;
 
   return (
     <>
@@ -36,11 +40,16 @@ export function ProductCard({ product }: ProductCardProps) {
             className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.04]"
           />
 
-          {/* Badges */}
+          {/* Badges on Image */}
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {product.is_new && !isOutOfStock && (
-              <span className="px-2 py-0.5 bg-retro-orange text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+              <span className="px-2 py-0.5 bg-ink text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
                 NEW
+              </span>
+            )}
+            {hasDiscount && !isOutOfStock && (
+              <span className="px-2 py-0.5 bg-retro-orange text-white text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+                -{discountPercent}%
               </span>
             )}
             {isOutOfStock && (
@@ -48,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 {t('sold_out')}
               </span>
             )}
-            {isLowStock && !product.is_new && (
+            {isLowStock && !product.is_new && !hasDiscount && (
               <span className="px-2 py-0.5 bg-retro-orange text-white text-[9px] sm:text-[10px] font-bold uppercase">
                 {t('only_x_left', { count: totalAvailable })}
               </span>
@@ -66,7 +75,7 @@ export function ProductCard({ product }: ProductCardProps) {
             <div className="hidden sm:block absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 z-10">
               <button
                 onClick={(e) => { e.preventDefault(); setReserveModalOpen(true); }}
-                className="w-full py-3 bg-ink text-white text-xs font-bold uppercase tracking-[0.12em] hover:bg-retro-orange transition-colors duration-200"
+                className="w-full py-3 bg-ink text-white text-xs font-bold uppercase tracking-[0.12em] hover:bg-retro-orange hover:text-white transition-colors duration-200"
               >
                 {t('btn_reserve')}
               </button>
@@ -82,9 +91,22 @@ export function ProductCard({ product }: ProductCardProps) {
                 {product.name}
               </h3>
             </Link>
-            <p className="font-display text-lg sm:text-xl text-ink mt-0.5 tracking-wide">
-              {formatPrice(product.price)}
-            </p>
+
+            {/* Price with Discount Support */}
+            {hasDiscount ? (
+              <div className="flex items-baseline gap-1.5 flex-wrap mt-0.5">
+                <span className="font-display text-lg sm:text-xl text-retro-orange font-bold leading-tight">
+                  {formatPrice(product.price)}
+                </span>
+                <span className="text-xs text-muted line-through opacity-70">
+                  {formatPrice(product.original_price)}
+                </span>
+              </div>
+            ) : (
+              <p className="font-display text-lg sm:text-xl text-ink mt-0.5 tracking-wide leading-tight">
+                {formatPrice(product.price)}
+              </p>
+            )}
           </div>
 
           {/* Sizes chips */}

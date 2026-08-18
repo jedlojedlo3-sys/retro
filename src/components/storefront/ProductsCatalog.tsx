@@ -21,6 +21,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [onlyNew, setOnlyNew] = useState(false);
+  const [onlySale, setOnlySale] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   useEffect(() => {
@@ -32,12 +33,17 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   }, [products]);
 
   const newCount = useMemo(() => activeProducts.filter((p) => p.is_new).length, [activeProducts]);
+  const saleCount = useMemo(
+    () => activeProducts.filter((p) => p.original_price && p.original_price > p.price).length,
+    [activeProducts]
+  );
 
   const filteredProducts = useMemo(() => {
     return activeProducts
       .filter((product) => {
         if (selectedCategory !== 'all' && product.category !== selectedCategory) return false;
         if (onlyNew && !product.is_new) return false;
+        if (onlySale && (!product.original_price || product.original_price <= product.price)) return false;
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           if (
@@ -62,15 +68,16 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         if (sortBy === 'price_desc') return b.price - a.price;
         return 0;
       });
-  }, [activeProducts, selectedCategory, searchQuery, onlyInStock, onlyNew, sortBy, getCategoryText]);
+  }, [activeProducts, selectedCategory, searchQuery, onlyInStock, onlyNew, onlySale, sortBy, getCategoryText]);
 
-  const hasActiveFilters = selectedCategory !== 'all' || searchQuery.trim() || onlyInStock || onlyNew || sortBy !== 'newest';
+  const hasActiveFilters = selectedCategory !== 'all' || searchQuery.trim() || onlyInStock || onlyNew || onlySale || sortBy !== 'newest';
 
   const resetAll = () => {
     setSelectedCategory('all');
     setSearchQuery('');
     setOnlyInStock(false);
     setOnlyNew(false);
+    setOnlySale(false);
     setSortBy('newest');
   };
 
@@ -98,9 +105,9 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
           {/* All */}
           <button
-            onClick={() => { setSelectedCategory('all'); setOnlyNew(false); }}
+            onClick={() => { setSelectedCategory('all'); setOnlyNew(false); setOnlySale(false); }}
             className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-150 ${
-              selectedCategory === 'all' && !onlyNew
+              selectedCategory === 'all' && !onlyNew && !onlySale
                 ? 'bg-ink text-white shadow-sm'
                 : 'bg-white border border-black/10 text-muted hover:text-ink hover:border-ink'
             }`}
@@ -113,12 +120,13 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
             <button
               onClick={() => {
                 setOnlyNew(!onlyNew);
+                setOnlySale(false);
                 if (!onlyNew) setSelectedCategory('all');
               }}
               className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-150 flex items-center gap-1 ${
                 onlyNew
-                  ? 'bg-retro-orange text-white shadow-sm ring-2 ring-retro-orange/30'
-                  : 'bg-white border border-retro-orange/40 text-retro-orange hover:bg-retro-orange hover:text-white'
+                  ? 'bg-ink text-white shadow-sm ring-2 ring-ink/30'
+                  : 'bg-white border border-black/15 text-ink hover:bg-ink hover:text-white'
               }`}
             >
               <Sparkles size={12} />
@@ -127,15 +135,34 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
             </button>
           )}
 
+          {/* SALE / Popust Filter Pill */}
+          {saleCount > 0 && (
+            <button
+              onClick={() => {
+                setOnlySale(!onlySale);
+                setOnlyNew(false);
+                if (!onlySale) setSelectedCategory('all');
+              }}
+              className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-extrabold uppercase tracking-wider transition-all duration-150 flex items-center gap-1 ${
+                onlySale
+                  ? 'bg-retro-orange text-white shadow-sm ring-2 ring-retro-orange/30'
+                  : 'bg-white border border-retro-orange/40 text-retro-orange hover:bg-retro-orange hover:text-white'
+              }`}
+            >
+              <span>🔥 {t('only_sale')}</span>
+              <span className="opacity-80 ml-0.5">({saleCount})</span>
+            </button>
+          )}
+
           {/* Categories */}
           {CATEGORIES.map((cat) => {
             const count = activeProducts.filter((p) => p.category === cat.key).length;
             if (count === 0) return null;
-            const isSelected = selectedCategory === cat.key && !onlyNew;
+            const isSelected = selectedCategory === cat.key && !onlyNew && !onlySale;
             return (
               <button
                 key={cat.key}
-                onClick={() => { setSelectedCategory(cat.key); setOnlyNew(false); }}
+                onClick={() => { setSelectedCategory(cat.key); setOnlyNew(false); setOnlySale(false); }}
                 className={`shrink-0 h-8 px-3.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-150 ${
                   isSelected
                     ? 'bg-ink text-white shadow-sm'

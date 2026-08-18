@@ -13,7 +13,9 @@ import {
   Sparkles,
   Camera,
   X,
-  AlertCircle
+  AlertCircle,
+  Percent,
+  Tag
 } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Product, ProductVariant, Category } from '@/types/database';
@@ -23,7 +25,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const PRESET_CLOTHING_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const PRESET_JEANS_SIZES = ['30', '31', '32', '33', '34', '36'];
-const PRICE_PRESETS = [790, 890, 1290, 1490, 1690, 1890, 1990, 2490, 2690, 3290];
+const PRICE_PRESETS = [690, 790, 890, 1290, 1390, 1490, 1690, 1890, 1990, 2490, 2690, 2790, 3290];
 
 interface VariantInput {
   id?: string;
@@ -37,7 +39,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterActive, setFilterActive] = useState<'all' | 'new' | 'active' | 'hidden'>('all');
+  const [filterActive, setFilterActive] = useState<'all' | 'new' | 'sale' | 'active' | 'hidden'>('all');
 
   // Inline price quick edit state
   const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function AdminProductsPage() {
   const [formName, setFormName] = useState('');
   const [formCategory, setFormCategory] = useState<Category>('shirts');
   const [formPrice, setFormPrice] = useState('1490');
+  const [formOriginalPrice, setFormOriginalPrice] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [formIsNew, setFormIsNew] = useState(true);
   const [formActive, setFormActive] = useState(true);
@@ -80,6 +83,7 @@ export default function AdminProductsPage() {
     setFormName('');
     setFormCategory('shirts');
     setFormPrice('1490');
+    setFormOriginalPrice('');
     setFormDescription('');
     setFormIsNew(true);
     setFormActive(true);
@@ -96,6 +100,7 @@ export default function AdminProductsPage() {
     setFormName(product.name);
     setFormCategory(product.category);
     setFormPrice(String(product.price));
+    setFormOriginalPrice(product.original_price ? String(product.original_price) : '');
     setFormDescription(product.description || '');
     setFormIsNew(product.is_new ?? false);
     setFormActive(product.active !== false);
@@ -128,6 +133,21 @@ export default function AdminProductsPage() {
         setFormVariants(PRESET_CLOTHING_SIZES.map((s) => ({ size: s, stock_quantity: 2, reserved_quantity: 0 })));
       }
     }
+  };
+
+  // Quick discount applicator helper
+  const applyQuickDiscount = (discountPercent: number) => {
+    const base = Number(formOriginalPrice) || Number(formPrice) || 1000;
+    const discounted = Math.round((base * (1 - discountPercent / 100)) / 10) * 10;
+    setFormOriginalPrice(String(base));
+    setFormPrice(String(discounted));
+  };
+
+  const removeDiscount = () => {
+    if (formOriginalPrice) {
+      setFormPrice(formOriginalPrice);
+    }
+    setFormOriginalPrice('');
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -197,9 +217,13 @@ export default function AdminProductsPage() {
 
     const priceNum = Number(formPrice);
     if (!formPrice || isNaN(priceNum) || priceNum <= 0) {
-      setModalError('Внесете важечка цена во денари.');
+      setModalError('Внесете важечка продажна цена во денари.');
       return;
     }
+
+    const origPriceNum = formOriginalPrice && !isNaN(Number(formOriginalPrice)) && Number(formOriginalPrice) > priceNum
+      ? Number(formOriginalPrice)
+      : null;
 
     if (formImages.length === 0) {
       setModalError('Потребна е барем една слика.');
@@ -230,6 +254,7 @@ export default function AdminProductsPage() {
       name: formName.trim(),
       category: formCategory,
       price: priceNum,
+      original_price: origPriceNum,
       description: formDescription.trim() || null,
       image_url: formImages[0],
       additional_images: formImages.slice(1),
@@ -257,6 +282,7 @@ export default function AdminProductsPage() {
           name: formName.trim(),
           category: formCategory,
           price: priceNum,
+          original_price: origPriceNum,
           description: formDescription.trim() || null,
           image_url: formImages[0],
           additional_images: formImages.slice(1),
@@ -349,6 +375,7 @@ export default function AdminProductsPage() {
     if (filterActive === 'active' && !p.active) return false;
     if (filterActive === 'hidden' && p.active) return false;
     if (filterActive === 'new' && !p.is_new) return false;
+    if (filterActive === 'sale' && (!p.original_price || p.original_price <= p.price)) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       return (
@@ -358,6 +385,19 @@ export default function AdminProductsPage() {
     }
     return true;
   });
+
+  const saleCount = products.filter((p) => p.original_price && p.original_price > p.price).length;
+
+  // Computed discount preview inside modal
+  const modalHasDiscount = Boolean(
+    formOriginalPrice &&
+    !isNaN(Number(formOriginalPrice)) &&
+    !isNaN(Number(formPrice)) &&
+    Number(formOriginalPrice) > Number(formPrice)
+  );
+  const modalDiscountPercent = modalHasDiscount
+    ? Math.round(((Number(formOriginalPrice) - Number(formPrice)) / Number(formOriginalPrice)) * 100)
+    : 0;
 
   return (
     <div className="min-h-screen bg-paper flex flex-col pb-20 w-full max-w-full overflow-x-hidden">
@@ -401,10 +441,18 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setFilterActive('new')}
             className={`px-3 py-1 border transition-all ${
-              filterActive === 'new' ? 'bg-retro-orange text-white border-retro-orange' : 'bg-white text-ink border-black/10'
+              filterActive === 'new' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
             ⭐ NEW ({products.filter((p) => p.is_new).length})
+          </button>
+          <button
+            onClick={() => setFilterActive('sale')}
+            className={`px-3 py-1 border transition-all ${
+              filterActive === 'sale' ? 'bg-retro-orange text-white border-retro-orange shadow-sm' : 'bg-white text-ink border-black/10'
+            }`}
+          >
+            🔥 {t('admin_tab_sale')} ({saleCount})
           </button>
           <button
             onClick={() => setFilterActive('active')}
@@ -433,6 +481,11 @@ export default function AdminProductsPage() {
                 0
               ) ?? 0;
 
+            const hasDiscount = Boolean(product.original_price && product.original_price > product.price);
+            const discountPct = hasDiscount
+              ? Math.round((((product.original_price || 0) - product.price) / (product.original_price || 1)) * 100)
+              : 0;
+
             return (
               <div
                 key={product.id}
@@ -440,7 +493,7 @@ export default function AdminProductsPage() {
                   product.active ? 'border-black/10' : 'border-dashed border-zinc-300 opacity-70 bg-zinc-50'
                 }`}
               >
-                {/* Top Row: Thumbnail, Info & Action Buttons (Stacked on small mobile) */}
+                {/* Top Row: Thumbnail, Info & Action Buttons */}
                 <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div
@@ -461,8 +514,13 @@ export default function AdminProductsPage() {
                           {getCategoryText(product.category)}
                         </span>
                         {product.is_new && (
-                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-retro-orange text-white">
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-ink text-white">
                             NEW ⭐
+                          </span>
+                        )}
+                        {hasDiscount && (
+                          <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-retro-orange text-white">
+                            🔥 -{discountPct}%
                           </span>
                         )}
                         {!product.active && (
@@ -480,7 +538,7 @@ export default function AdminProductsPage() {
                       </h3>
 
                       {/* Inline Price with 1-click Quick Edit */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {editingPriceId === product.id ? (
                           <div className="flex items-center gap-1">
                             <input
@@ -501,10 +559,17 @@ export default function AdminProductsPage() {
                         ) : (
                           <button
                             onClick={() => startEditPrice(product)}
-                            className="font-display text-base sm:text-lg text-ink hover:text-retro-orange transition-colors flex items-center gap-1"
+                            className="font-display text-base sm:text-lg text-ink hover:text-retro-orange transition-colors flex items-center gap-1.5"
                             title="Click to edit price"
                           >
-                            <span>{formatPrice(product.price)}</span>
+                            <span className={hasDiscount ? 'text-retro-orange font-bold' : ''}>
+                              {formatPrice(product.price)}
+                            </span>
+                            {hasDiscount && (
+                              <span className="text-xs text-muted line-through opacity-70">
+                                {formatPrice(product.original_price)}
+                              </span>
+                            )}
                             <span className="text-[10px] text-muted">✏️</span>
                           </button>
                         )}
@@ -521,8 +586,8 @@ export default function AdminProductsPage() {
                       onClick={() => handleToggleNew(product.id, product.is_new)}
                       className={`px-2 py-1.5 border text-xs font-bold transition-all ${
                         product.is_new
-                          ? 'border-retro-orange bg-retro-orange text-white'
-                          : 'border-black/10 hover:border-retro-orange text-muted hover:text-retro-orange bg-white'
+                          ? 'border-ink bg-ink text-white'
+                          : 'border-black/10 hover:border-ink text-muted hover:text-ink bg-white'
                       }`}
                       title={product.is_new ? 'Remove NEW' : 'Mark as NEW'}
                     >
@@ -715,26 +780,109 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* 4. Price with Quick Preset Chips */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
-                  {t('admin_price_label')} <span className="text-retro-orange">*</span>
-                </label>
-                <div className="flex items-center gap-2 mb-1">
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="50"
-                    placeholder="1490"
-                    value={formPrice}
-                    onChange={(e) => setFormPrice(e.target.value)}
-                    className="w-full border border-black/10 bg-surface px-3 py-1.5 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
-                  />
-                  <span className="font-display text-base text-ink font-bold shrink-0">den.</span>
+              {/* 4. Price and Discount (Popust) Setup */}
+              <div className="p-3 bg-surface border border-black/10 space-y-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Selling Price */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-ink mb-1">
+                      {t('admin_price_label')} <span className="text-retro-orange">*</span>
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        step="50"
+                        placeholder="1490"
+                        value={formPrice}
+                        onChange={(e) => setFormPrice(e.target.value)}
+                        className="w-full border border-black/15 bg-white px-2.5 py-1.5 text-sm font-bold text-ink focus:outline-none focus:border-ink"
+                      />
+                      <span className="font-display text-sm text-ink font-bold shrink-0">den.</span>
+                    </div>
+                  </div>
+
+                  {/* Regular / Original Price (for Discount) */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-muted mb-1">
+                      {t('admin_orig_price_label')}
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        min="0"
+                        step="50"
+                        placeholder="1990 (опционално)"
+                        value={formOriginalPrice}
+                        onChange={(e) => setFormOriginalPrice(e.target.value)}
+                        className="w-full border border-black/15 bg-white px-2.5 py-1.5 text-sm font-bold text-ink focus:outline-none focus:border-ink placeholder:text-xs placeholder:font-normal"
+                      />
+                      <span className="font-display text-sm text-muted font-bold shrink-0">den.</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Quick Discount Calculator Buttons */}
+                <div className="space-y-1 pt-1 border-t border-black/5">
+                  <span className="text-[10px] font-bold uppercase text-muted tracking-wider block">
+                    Брз попуст (Quick %):
+                  </span>
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <button
+                      type="button"
+                      onClick={() => applyQuickDiscount(10)}
+                      className="px-2 py-0.5 bg-white hover:bg-retro-orange hover:text-white border border-black/10 text-[10px] font-bold transition-colors"
+                    >
+                      -10%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyQuickDiscount(20)}
+                      className="px-2 py-0.5 bg-white hover:bg-retro-orange hover:text-white border border-black/10 text-[10px] font-bold transition-colors"
+                    >
+                      -20%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyQuickDiscount(30)}
+                      className="px-2 py-0.5 bg-white hover:bg-retro-orange hover:text-white border border-black/10 text-[10px] font-bold transition-colors"
+                    >
+                      -30%
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyQuickDiscount(50)}
+                      className="px-2 py-0.5 bg-white hover:bg-retro-orange hover:text-white border border-black/10 text-[10px] font-bold transition-colors"
+                    >
+                      -50%
+                    </button>
+
+                    {formOriginalPrice && (
+                      <button
+                        type="button"
+                        onClick={removeDiscount}
+                        className="px-2 py-0.5 text-red-600 hover:bg-red-50 text-[10px] font-bold ml-auto transition-colors"
+                      >
+                        ✕ Без попуст
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Active discount summary banner */}
+                {modalHasDiscount && (
+                  <div className="p-2 bg-retro-orange/10 border border-retro-orange/30 text-xs flex items-center justify-between text-retro-orange font-bold">
+                    <span className="flex items-center gap-1">
+                      <Tag size={13} />
+                      <span>Активен попуст: -{modalDiscountPercent}%</span>
+                    </span>
+                    <span>Заштеда: {Number(formOriginalPrice) - Number(formPrice)} den.</span>
+                  </div>
+                )}
+
                 {/* Fast price chips */}
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1 pt-1">
                   {PRICE_PRESETS.map((p) => (
                     <button
                       key={p}
@@ -743,7 +891,7 @@ export default function AdminProductsPage() {
                       className={`px-1.5 py-0.2 text-[10px] font-bold border transition-colors ${
                         formPrice === String(p)
                           ? 'bg-ink text-white border-ink'
-                          : 'bg-surface text-muted border-black/10 hover:border-ink hover:text-ink'
+                          : 'bg-white text-muted border-black/10 hover:border-ink hover:text-ink'
                       }`}
                     >
                       {p}
@@ -822,7 +970,7 @@ export default function AdminProductsPage() {
                   onClick={() => setFormIsNew(!formIsNew)}
                   className={`p-2 border text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all ${
                     formIsNew
-                      ? 'bg-retro-orange text-white border-retro-orange shadow-sm'
+                      ? 'bg-ink text-white border-ink shadow-sm'
                       : 'bg-surface text-muted border-black/10 hover:border-ink hover:text-ink'
                   }`}
                 >

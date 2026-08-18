@@ -73,8 +73,13 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
             />
 
             {product.is_new && !isOutOfStock && (
-              <div className="absolute top-4 left-4 px-3 py-1.5 bg-retro-orange text-white text-xs font-extrabold uppercase tracking-widest shadow-md">
+              <div className="absolute top-4 left-4 px-3 py-1.5 bg-ink text-white text-xs font-extrabold uppercase tracking-widest shadow-md">
                 NEW ⭐
+              </div>
+            )}
+            {product.original_price && product.original_price > product.price && !isOutOfStock && (
+              <div className="absolute top-4 right-4 px-3 py-1.5 bg-retro-orange text-white text-xs font-extrabold uppercase tracking-widest shadow-md">
+                -{Math.round(((product.original_price - product.price) / product.original_price) * 100)}% {t('sale_badge')}
               </div>
             )}
             {isOutOfStock && (
@@ -111,8 +116,13 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
                   {getCategoryText(product.category)}
                 </span>
                 {product.is_new && (
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-retro-orange text-white">
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-ink text-white">
                     NEW
+                  </span>
+                )}
+                {product.original_price && product.original_price > product.price && (
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-retro-orange text-white">
+                    -{Math.round(((product.original_price - product.price) / product.original_price) * 100)}%
                   </span>
                 )}
               </div>
@@ -123,9 +133,29 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
               {product.name}
             </h1>
 
-            <p className="font-display text-3xl sm:text-4xl text-ink font-normal pt-2">
-              {formatPrice(product.price)}
-            </p>
+            {/* Price with Discount Breakdown */}
+            {product.original_price && product.original_price > product.price ? (
+              <div className="pt-2 space-y-1">
+                <div className="flex items-baseline gap-3">
+                  <span className="font-display text-3xl sm:text-4xl text-retro-orange font-bold">
+                    {formatPrice(product.price)}
+                  </span>
+                  <span className="font-display text-xl sm:text-2xl text-muted line-through opacity-70">
+                    {formatPrice(product.original_price)}
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-700 font-bold">
+                  {t('save_amount', {
+                    amount: formatPrice(product.original_price - product.price),
+                    percent: Math.round(((product.original_price - product.price) / product.original_price) * 100),
+                  })}
+                </p>
+              </div>
+            ) : (
+              <p className="font-display text-3xl sm:text-4xl text-ink font-normal pt-2">
+                {formatPrice(product.price)}
+              </p>
+            )}
           </div>
 
           {/* Sizes Selection */}

@@ -5,7 +5,7 @@ import { Category, Product } from '@/types/database';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, category, price, description, image_url, additional_images, variants, active, is_new } = body;
+    const { id, name, category, price, original_price, description, image_url, additional_images, variants, active, is_new } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ success: false, error: 'Името на производот е задолжително.' }, { status: 400 });
@@ -19,6 +19,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Потребна е барем една слика.' }, { status: 400 });
     }
 
+    const origPriceNum = original_price && !isNaN(Number(original_price)) && Number(original_price) > 0
+      ? Number(original_price)
+      : null;
+
     const supabaseConfigured = Boolean(
       process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
     );
@@ -30,6 +34,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         category: (category || 'other') as Category,
         price: Number(price),
+        original_price: origPriceNum,
         description: description?.trim() || null,
         image_url: image_url.trim(),
         additional_images: additional_images || [],
@@ -111,11 +116,15 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, category, price, description, image_url, additional_images, variants, active, is_new } = body;
+    const { id, name, category, price, original_price, description, image_url, additional_images, variants, active, is_new } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
     }
+
+    const origPriceNum = original_price && !isNaN(Number(original_price)) && Number(original_price) > 0
+      ? Number(original_price)
+      : null;
 
     const supabaseConfigured = Boolean(
       process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -128,6 +137,7 @@ export async function PUT(request: NextRequest) {
         name: name?.trim() || '',
         category: category as Category,
         price: Number(price),
+        original_price: origPriceNum,
         description: description?.trim() || null,
         image_url: image_url?.trim() || '',
         additional_images: additional_images || [],
@@ -153,6 +163,7 @@ export async function PUT(request: NextRequest) {
         name: name?.trim(),
         category: category as Category,
         price: Number(price),
+        original_price: origPriceNum,
         description: description?.trim() || null,
         image_url: image_url?.trim(),
         additional_images: additional_images || [],
