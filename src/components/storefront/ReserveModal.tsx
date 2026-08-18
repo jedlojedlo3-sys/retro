@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { X, CheckCircle, AlertCircle, MapPin, MessageCircle, ArrowRight, Sparkles, Phone, User } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, MapPin, ArrowRight, Sparkles, Phone, User } from 'lucide-react';
 import { Product } from '@/types/database';
 import { formatPrice } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -20,7 +20,7 @@ export function ReserveModal({
   isOpen,
   onClose,
 }: ReserveModalProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // Find initial available variant
   const availableVariants = (product.variants || []).filter(
@@ -105,17 +105,6 @@ export function ReserveModal({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // WhatsApp prefilled reservation message
-  const handleWhatsAppReserve = () => {
-    const sizeText = currentVariant ? currentVariant.size : '';
-    const phone = '38970000000'; // Boutique contact number
-    const msg = language === 'mk'
-      ? `Здраво Retro Boutique! Сакам да го резервирам моделот: ${product.name} (Големина: ${sizeText}, Цена: ${formatPrice(product.price)}). Моето име е ${customerName || 'купувач'}.`
-      : `Hello Retro Boutique! I would like to reserve: ${product.name} (Size: ${sizeText}, Price: ${formatPrice(product.price)}). My name is ${customerName || 'Customer'}.`;
-
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   return (
@@ -325,7 +314,7 @@ export function ReserveModal({
               </p>
 
               {/* Submit Button */}
-              <div className="space-y-2 pt-1">
+              <div className="pt-1">
                 <button
                   type="submit"
                   disabled={isSubmitting || !selectedVariantId || availableQty <= 0}
@@ -335,16 +324,6 @@ export function ReserveModal({
                 >
                   <span>{isSubmitting ? t('modal_processing') : t('modal_confirm')}</span>
                   <ArrowRight size={15} />
-                </button>
-
-                {/* WhatsApp Alternative */}
-                <button
-                  type="button"
-                  onClick={handleWhatsAppReserve}
-                  className="w-full py-2.5 border border-emerald-600/30 text-emerald-800 bg-emerald-50/60 hover:bg-emerald-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <MessageCircle size={15} className="text-emerald-700" />
-                  <span>{t('modal_whatsapp_btn')}</span>
                 </button>
               </div>
             </form>
