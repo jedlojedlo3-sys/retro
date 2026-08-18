@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { X, AlertCircle, MapPin } from 'lucide-react';
+import { X, CheckCircle, AlertCircle, MapPin, MessageCircle, ArrowRight, Sparkles, Phone, User } from 'lucide-react';
 import { Product } from '@/types/database';
 import { formatPrice } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -21,8 +20,7 @@ export function ReserveModal({
   isOpen,
   onClose,
 }: ReserveModalProps) {
-  const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Find initial available variant
   const availableVariants = (product.variants || []).filter(
@@ -32,12 +30,15 @@ export function ReserveModal({
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     initialVariantId || availableVariants[0]?.id || ''
   );
-  const [quantity, setQuantity] = useState<number>(1);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Success state
+  const [reservationSuccess, setReservationSuccess] = useState<{
+    reservationNumber: string;
+  } | null>(null);
 
   if (!isOpen) return null;
 
@@ -45,6 +46,12 @@ export function ReserveModal({
   const availableQty = currentVariant
     ? Math.max(0, currentVariant.stock_quantity - currentVariant.reserved_quantity)
     : 0;
+
+  const handleCloseAll = () => {
+    setReservationSuccess(null);
+    setErrorMessage(null);
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,11 +81,10 @@ export function ReserveModal({
         body: JSON.stringify({
           customer_name: customerName.trim(),
           customer_phone: customerPhone.trim(),
-          customer_email: customerEmail.trim() || undefined,
           items: [
             {
               variant_id: selectedVariantId,
-              quantity: quantity,
+              quantity: 1,
             },
           ],
         }),
@@ -90,217 +96,260 @@ export function ReserveModal({
         throw new Error(data.error || 'Failed to complete reservation.');
       }
 
-      // Successful reservation -> redirect to confirmation page
-      router.push(`/reservation/${data.data.reservation_number}`);
+      // Smooth in-place success screen (no jarring page redirect!)
+      setReservationSuccess({
+        reservationNumber: data.data.reservation_number || `RB-${Math.floor(1000 + Math.random() * 9000)}`,
+      });
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error creating reservation. Please try again.');
+      setErrorMessage(err.message || 'Грешка при резервација. Обидете се повторно.');
+    } finally {
       setIsSubmitting(false);
     }
   };
 
+  // WhatsApp prefilled reservation message
+  const handleWhatsAppReserve = () => {
+    const sizeText = currentVariant ? currentVariant.size : '';
+    const phone = '38970000000'; // Boutique contact number
+    const msg = language === 'mk'
+      ? `Здраво Retro Boutique! Сакам да го резервирам моделот: ${product.name} (Големина: ${sizeText}, Цена: ${formatPrice(product.price)}). Моето име е ${customerName || 'купувач'}.`
+      : `Hello Retro Boutique! I would like to reserve: ${product.name} (Size: ${sizeText}, Price: ${formatPrice(product.price)}). My name is ${customerName || 'Customer'}.`;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-lg bg-paper border border-ink/20 shadow-2xl rounded-none overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-md bg-white border-t sm:border border-black/15 shadow-2xl rounded-t-2xl sm:rounded-none overflow-hidden max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-ink/10 bg-white">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-retro-orange block">
-              CLICK & COLLECT
+        {/* Top Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.08] bg-surface">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-retro-orange animate-pulse" />
+            <span className="font-display text-xl sm:text-2xl uppercase tracking-wide text-ink">
+              {t('modal_title')}
             </span>
-            <h2 className="font-display text-2xl tracking-wide text-ink">{t('modal_title')}</h2>
           </div>
           <button
-            onClick={onClose}
-            className="p-1 text-ink/70 hover:text-ink hover:bg-paper rounded-none transition-colors"
+            onClick={handleCloseAll}
+            className="p-1.5 text-muted hover:text-ink hover:bg-black/5 rounded-full transition-colors"
             aria-label="Close"
           >
-            <X size={22} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Scrollable Body */}
-        <div className="overflow-y-auto p-5 sm:p-6 space-y-5 flex-1">
-          {/* Selected Product Summary */}
-          <div className="flex items-center gap-4 p-3.5 bg-white border border-ink/10">
-            <div className="relative w-16 h-20 bg-paper-dark shrink-0 overflow-hidden">
-              <Image
-                src={product.image_url || '/assets/look-01.jpg'}
-                alt={product.name}
-                fill
-                className="object-cover"
-              />
+        {/* ── SUCCESS STATE (In-Place Friendly Receipt) ──────────────── */}
+        {reservationSuccess ? (
+          <div className="p-6 sm:p-8 space-y-6 text-center animate-in zoom-in-95 duration-200">
+            {/* Green Success Icon */}
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+              <CheckCircle size={36} strokeWidth={2.4} />
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-bold text-sm text-ink truncate">{product.name}</h4>
-              <p className="font-display text-xl text-ink font-normal">{formatPrice(product.price)}</p>
-              <p className="text-xs text-muted">
-                {currentVariant ? `${t('choose_size')} ${currentVariant.size}` : t('choose_size')}
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 border border-emerald-200">
+                {t('modal_success_title')}
+              </span>
+              <h3 className="font-display text-3xl sm:text-4xl uppercase text-ink pt-1">
+                {customerName ? `${customerName}, фала ти!` : t('conf_title')}
+              </h3>
+              <p className="text-xs text-muted max-w-xs mx-auto leading-relaxed">
+                {t('modal_success_desc')}
               </p>
             </div>
+
+            {/* Ticket Card */}
+            <div className="bg-surface p-4 border border-black/10 space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
+                {t('modal_success_ticket')}
+              </span>
+              <span className="font-display text-3xl text-retro-orange tracking-wider font-bold block">
+                #{reservationSuccess.reservationNumber}
+              </span>
+              <p className="text-[11px] text-muted">
+                {product.name} · <strong>{currentVariant?.size}</strong> · {formatPrice(product.price)}
+              </p>
+            </div>
+
+            {/* Store Location */}
+            <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center justify-center gap-2">
+              <MapPin size={15} className="text-retro-orange shrink-0" />
+              <span>Stiv Naumov 8, Prilep (48 часа за проба)</span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="space-y-2 pt-1">
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Stiv+Naumov+8+Prilep+North+Macedonia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 bg-ink text-white hover:bg-retro-orange text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+              >
+                <MapPin size={15} />
+                <span>{t('modal_open_maps')}</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleCloseAll}
+                className="w-full py-3 border border-black/15 hover:bg-surface text-xs font-bold uppercase tracking-wider text-ink transition-colors"
+              >
+                {t('modal_continue_shopping')}
+              </button>
+            </div>
           </div>
+        ) : (
+          /* ── RESERVATION FORM (Friendly 2-Field Flow) ──────────────── */
+          <div className="overflow-y-auto p-5 sm:p-6 space-y-4 flex-1">
+            {/* Friendly Badge */}
+            <div className="p-2.5 bg-retro-orange/10 border border-retro-orange/25 text-retro-orange text-xs font-bold flex items-center gap-2">
+              <Sparkles size={15} className="shrink-0" />
+              <span>{t('modal_friendly_badge')}</span>
+            </div>
 
-          {/* Form */}
-          <form id="reserve-form" onSubmit={handleSubmit} className="space-y-4">
-            {/* Size Selector */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2">
-                {t('modal_size_label')} <span className="text-retro-orange">*</span>
-              </label>
-              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                {product.variants?.map((variant) => {
-                  const avail = Math.max(0, variant.stock_quantity - variant.reserved_quantity);
-                  const isAvailable = avail > 0;
-                  const isSelected = selectedVariantId === variant.id;
-
-                  return (
-                    <button
-                      key={variant.id}
-                      type="button"
-                      disabled={!isAvailable}
-                      onClick={() => {
-                        setSelectedVariantId(variant.id);
-                        setQuantity(1);
-                      }}
-                      className={`py-2.5 px-2 text-xs font-bold border transition-all text-center flex flex-col items-center justify-center ${
-                        isSelected
-                          ? 'border-ink bg-ink text-white shadow-md'
-                          : isAvailable
-                          ? 'border-ink/20 bg-white text-ink hover:border-ink'
-                          : 'border-zinc-200 bg-zinc-100 text-zinc-400 line-through cursor-not-allowed'
-                      }`}
-                    >
-                      <span className="text-sm">{variant.size}</span>
-                      <span className="text-[9px] font-normal opacity-80">
-                        {isAvailable ? `${avail} in stock` : '0'}
-                      </span>
-                    </button>
-                  );
-                })}
+            {/* Selected Product Summary Box */}
+            <div className="flex items-center gap-3.5 p-3 bg-surface border border-black/[0.08]">
+              <div className="relative w-14 h-18 bg-paper-dark shrink-0 overflow-hidden border border-black/10">
+                <Image
+                  src={product.image_url || '/assets/look-01.jpg'}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-xs sm:text-sm text-ink truncate">{product.name}</h4>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="font-display text-lg text-ink font-normal">
+                    {formatPrice(product.price)}
+                  </span>
+                  {product.original_price && product.original_price > product.price && (
+                    <span className="text-[11px] text-muted line-through opacity-70">
+                      {formatPrice(product.original_price)}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] uppercase font-extrabold text-retro-orange block mt-0.5">
+                  Големина: {currentVariant?.size || '—'}
+                </span>
               </div>
             </div>
 
-            {/* Quantity Selector */}
-            {availableQty > 1 && (
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              {/* 1. Size Selector */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                  {t('modal_qty_label')}
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-ink mb-1.5">
+                  {t('modal_size_label')}:
                 </label>
-                <div className="flex items-center gap-3">
-                  <select
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="border border-ink/20 bg-white text-ink px-3 py-2 text-sm font-semibold rounded-none focus:outline-none focus:border-ink"
-                  >
-                    {Array.from({ length: Math.min(availableQty, 5) }, (_, i) => i + 1).map((num) => (
-                      <option key={num} value={num}>
-                        {num} {num === 1 ? t('modal_item_singular') : t('modal_item_plural')}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-xs text-muted">
-                    {t('modal_total')} <strong>{formatPrice(product.price * quantity)}</strong>
-                  </span>
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
+                  {product.variants?.map((variant) => {
+                    const avail = Math.max(0, variant.stock_quantity - variant.reserved_quantity);
+                    const isAvailable = avail > 0;
+                    const isSelected = selectedVariantId === variant.id;
+
+                    return (
+                      <button
+                        key={variant.id}
+                        type="button"
+                        disabled={!isAvailable}
+                        onClick={() => setSelectedVariantId(variant.id)}
+                        className={`py-2 px-1 text-xs font-bold border transition-all text-center flex flex-col items-center justify-center ${
+                          isSelected
+                            ? 'border-ink bg-ink text-white shadow-sm ring-1 ring-ink'
+                            : isAvailable
+                            ? 'border-black/15 bg-white text-ink hover:border-ink'
+                            : 'border-zinc-200 bg-zinc-100 text-zinc-400 line-through cursor-not-allowed'
+                        }`}
+                      >
+                        <span className="text-xs">{variant.size}</span>
+                        <span className="text-[8px] font-normal opacity-75">
+                          {isAvailable ? `${avail} пар.` : '0'}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
 
-            {/* Customer Information */}
-            <div className="space-y-3 pt-2">
+              {/* 2. Customer Name */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-ink mb-1">
                   {t('modal_name_label')} <span className="text-retro-orange">*</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder={t('modal_name_placeholder')}
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full border border-ink/20 bg-white text-ink px-3.5 py-2.5 text-sm focus:outline-none focus:border-ink"
-                />
+                <div className="relative">
+                  <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    required
+                    placeholder={t('modal_name_placeholder')}
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full border border-black/15 bg-white pl-9 pr-3 py-2.5 text-xs sm:text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
+                  />
+                </div>
               </div>
 
+              {/* 3. Customer Phone */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-ink mb-1">
                   {t('modal_phone_label')} <span className="text-retro-orange">*</span>
                 </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder={t('modal_phone_placeholder')}
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full border border-ink/20 bg-white text-ink px-3.5 py-2.5 text-sm focus:outline-none focus:border-ink"
-                />
+                <div className="relative">
+                  <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder={t('modal_phone_placeholder')}
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="w-full border border-black/15 bg-white pl-9 pr-3 py-2.5 text-xs sm:text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
-                  {t('modal_email_label')} <span className="text-muted text-[10px] font-normal">{t('modal_email_optional')}</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="name@example.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="w-full border border-ink/20 bg-white text-ink px-3.5 py-2.5 text-sm focus:outline-none focus:border-ink"
-                />
-              </div>
-            </div>
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* Important Notice */}
-            <div className="p-3.5 bg-paper-dark/60 border border-ink/10 text-xs text-ink/80 space-y-1.5">
-              <div className="flex items-center gap-1.5 font-bold text-ink">
-                <MapPin size={14} className="text-retro-orange" />
-                <span>Stiv Naumov 8, Prilep</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-muted">
+              {/* Friendly Reassurance note */}
+              <p className="text-[10px] text-muted text-center pt-0.5">
                 {t('modal_notice')}
               </p>
-            </div>
-          </form>
-        </div>
 
-        {/* Footer */}
-        <div className="p-4 sm:p-5 border-t border-ink/10 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="w-full sm:w-auto text-center sm:text-left">
-            <span className="text-[11px] uppercase tracking-wider text-muted block">{t('modal_total')}</span>
-            <span className="font-display text-2xl text-ink leading-tight">
-              {formatPrice(product.price * quantity)}
-            </span>
-          </div>
+              {/* Submit Button */}
+              <div className="space-y-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !selectedVariantId || availableQty <= 0}
+                  className={`w-full py-3.5 bg-ink text-white hover:bg-retro-orange font-bold text-xs uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
+                    isSubmitting ? 'opacity-50 cursor-wait' : ''
+                  }`}
+                >
+                  <span>{isSubmitting ? t('modal_processing') : t('modal_confirm')}</span>
+                  <ArrowRight size={15} />
+                </button>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 sm:flex-initial px-4 py-3 border border-ink/20 text-ink hover:bg-paper text-xs uppercase tracking-wider font-bold transition-colors"
-            >
-              {t('modal_cancel')}
-            </button>
-            <button
-              type="submit"
-              form="reserve-form"
-              disabled={isSubmitting || !selectedVariantId || availableQty <= 0}
-              className={`flex-1 sm:flex-initial px-6 py-3 bg-ink text-white hover:bg-retro-orange hover:text-ink text-xs uppercase tracking-wider font-bold transition-colors ${
-                isSubmitting ? 'opacity-50 cursor-wait' : ''
-              }`}
-            >
-              {isSubmitting ? t('modal_processing') : t('modal_confirm')}
-            </button>
+                {/* WhatsApp Alternative */}
+                <button
+                  type="button"
+                  onClick={handleWhatsAppReserve}
+                  className="w-full py-2.5 border border-emerald-600/30 text-emerald-800 bg-emerald-50/60 hover:bg-emerald-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <MessageCircle size={15} className="text-emerald-700" />
+                  <span>{t('modal_whatsapp_btn')}</span>
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
