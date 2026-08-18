@@ -12,7 +12,7 @@ interface ProductsCatalogProps {
   initialProducts: Product[];
 }
 
-type SortOption = 'new_first' | 'newest' | 'price_asc' | 'price_desc';
+type SortOption = 'newest' | 'price_asc' | 'price_desc';
 
 export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   const { t, getCategoryText, language } = useLanguage();
@@ -21,7 +21,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [onlyNew, setOnlyNew] = useState(false);
-  const [sortBy, setSortBy] = useState<SortOption>('new_first');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   useEffect(() => {
     setProducts(getClientProducts(initialProducts));
@@ -53,30 +53,30 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'new_first') {
+        if (sortBy === 'newest') {
           if (a.is_new && !b.is_new) return -1;
           if (!a.is_new && b.is_new) return 1;
           return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
         }
         if (sortBy === 'price_asc') return a.price - b.price;
         if (sortBy === 'price_desc') return b.price - a.price;
-        return new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime();
+        return 0;
       });
   }, [activeProducts, selectedCategory, searchQuery, onlyInStock, onlyNew, sortBy, getCategoryText]);
 
-  const hasActiveFilters = selectedCategory !== 'all' || searchQuery.trim() || onlyInStock || onlyNew || sortBy !== 'new_first';
+  const hasActiveFilters = selectedCategory !== 'all' || searchQuery.trim() || onlyInStock || onlyNew || sortBy !== 'newest';
 
   const resetAll = () => {
     setSelectedCategory('all');
     setSearchQuery('');
     setOnlyInStock(false);
     setOnlyNew(false);
-    setSortBy('new_first');
+    setSortBy('newest');
   };
 
   return (
     <div className="space-y-6">
-      {/* ── Compact Header ─────────────────────────────── */}
+      {/* ── Collection Title Header ─────────────────────────────── */}
       <div className="pb-3 border-b border-black/[0.06] flex items-baseline justify-between gap-4">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-retro-orange block">
@@ -92,10 +92,10 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         </span>
       </div>
 
-      {/* ── Compact Static Filter Bar (Like Zara / ASOS) ─────────────────────────────── */}
-      <div className="space-y-2.5">
-        {/* Row 1: Horizontal Scrollable Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+      {/* ── Modern Sticky Fashion Filter Toolbar (Zara / ASOS style) ─────────────────────────────── */}
+      <div className="sticky top-14 sm:top-16 z-30 bg-paper/95 backdrop-blur-md py-2.5 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-black/[0.06] space-y-2.5">
+        {/* Row 1: Horizontal Category Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
           {/* All */}
           <button
             onClick={() => { setSelectedCategory('all'); setOnlyNew(false); }}
@@ -148,14 +148,14 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
           })}
         </div>
 
-        {/* Row 2: Slim Search, In-Stock, and Sort Toolbar */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        {/* Row 2: Search, In-Stock, Sort Toolbar */}
+        <div className="flex flex-wrap items-center gap-2">
           {/* Search Input */}
-          <div className="relative flex-1 min-w-[160px] sm:min-w-[220px]">
+          <div className="relative flex-1 min-w-[150px] sm:min-w-[220px]">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
             <input
               type="text"
-              placeholder={language === 'mk' ? 'Пребарај...' : 'Search...'}
+              placeholder={language === 'mk' ? 'Пребарај фармерки, џемпери...' : 'Search jeans, sweaters...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-8 pl-8 pr-7 text-xs bg-white border border-black/10 rounded-full text-ink placeholder:text-muted/60 focus:outline-none focus:border-ink transition-colors"
@@ -164,6 +164,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink"
+                aria-label="Clear search"
               >
                 <X size={12} />
               </button>
@@ -175,7 +176,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
             onClick={() => setOnlyInStock(!onlyInStock)}
             className={`h-8 px-3 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
               onlyInStock
-                ? 'bg-emerald-700 text-white border-emerald-700'
+                ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
                 : 'bg-white border-black/10 text-muted hover:text-ink'
             }`}
           >
@@ -183,14 +184,13 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
             <span>{language === 'mk' ? 'На залиха' : 'In stock'}</span>
           </button>
 
-          {/* Sort Selector */}
+          {/* Clean 3-Option Sort Selector */}
           <div className="relative shrink-0">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               className="h-8 pl-3 pr-7 bg-white border border-black/10 rounded-full text-xs font-semibold text-ink focus:outline-none focus:border-ink transition-colors cursor-pointer appearance-none"
             >
-              <option value="new_first">{language === 'mk' ? '⭐ Нови прво' : '⭐ New first'}</option>
               <option value="newest">{t('sort_newest')}</option>
               <option value="price_asc">{t('sort_price_asc')}</option>
               <option value="price_desc">{t('sort_price_desc')}</option>
@@ -198,7 +198,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
             <ArrowUpDown size={11} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
           </div>
 
-          {/* Reset button if filters active */}
+          {/* Reset button if any filter is active */}
           {hasActiveFilters && (
             <button
               onClick={resetAll}
@@ -214,13 +214,13 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
 
       {/* ── Products Grid (2 columns on mobile, 3 on tablet, 4 on desktop) ─────────────────────────────── */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 pt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 pt-1">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="py-20 text-center space-y-3 bg-white border border-black/5 p-8 rounded-none">
+        <div className="py-16 text-center space-y-3 bg-white border border-black/5 p-8">
           <p className="font-display text-2xl uppercase text-ink">{t('no_products_found')}</p>
           <p className="text-xs text-muted max-w-sm mx-auto">{t('no_products_desc')}</p>
           <button
