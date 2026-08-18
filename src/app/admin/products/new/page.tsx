@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Camera, Trash2, Check, AlertCircle } from 'lucide-react';
+import { Camera, Trash2, Check, AlertCircle, ArrowLeft } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Category, Product, ProductVariant } from '@/types/database';
 import { CATEGORIES } from '@/lib/utils';
@@ -12,6 +12,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 const PRESET_CLOTHING_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const PRESET_JEANS_SIZES = ['30', '31', '32', '33', '34', '36'];
+const PRICE_PRESETS = [790, 890, 1290, 1490, 1690, 1890, 1990, 2490, 2690, 3290];
 
 interface VariantInput {
   size: string;
@@ -23,24 +24,31 @@ export default function AddProductPage() {
   const { t, getCategoryText } = useLanguage();
 
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<Category>('jeans');
-  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState<Category>('shirts');
+  const [price, setPrice] = useState('1490');
   const [description, setDescription] = useState('');
   const [isNew, setIsNew] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantInput[]>([
-    { size: '30', stock_quantity: 2 },
-    { size: '32', stock_quantity: 3 },
-    { size: '34', stock_quantity: 2 },
-    { size: '36', stock_quantity: 1 },
+    { size: 'S', stock_quantity: 2 },
+    { size: 'M', stock_quantity: 4 },
+    { size: 'L', stock_quantity: 4 },
+    { size: 'XL', stock_quantity: 3 },
+    { size: 'XXL', stock_quantity: 2 },
   ]);
   const [customSize, setCustomSize] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const applyPresetSizes = (sizes: string[]) => {
-    setVariants(sizes.map((s) => ({ size: s, stock_quantity: 2 })));
+  const applyCategory = (newCat: Category) => {
+    setCategory(newCat);
+    if (newCat === 'jeans' || newCat === 'trousers') {
+      setVariants(PRESET_JEANS_SIZES.map((s) => ({ size: s, stock_quantity: 2 })));
+      if (price === '1490') setPrice('1990');
+    } else {
+      setVariants(PRESET_CLOTHING_SIZES.map((s) => ({ size: s, stock_quantity: 2 })));
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,17 +192,17 @@ export default function AddProductPage() {
 
   return (
     <div className="min-h-screen bg-paper flex flex-col pb-16">
-      <AdminHeader title={t('admin_add_header')} showBack backUrl="/admin" />
+      <AdminHeader title={t('admin_add_header')} showBack backUrl="/admin/products" />
 
-      <main className="max-w-xl mx-auto w-full p-4 sm:p-6 space-y-6">
-        <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 sm:p-8 space-y-6 shadow-sm">
+      <main className="max-w-xl mx-auto w-full p-4 sm:p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white border border-black/10 p-6 space-y-5 shadow-sm">
           {/* 1. Photos Section */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="block text-xs font-bold uppercase tracking-wider text-ink">
               {t('admin_photos_label')} <span className="text-retro-orange">*</span>
             </label>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
               {images.map((url, idx) => (
                 <div key={idx} className="relative aspect-[3/4] bg-surface border border-black/10 group">
                   <Image src={url} alt={`Photo ${idx + 1}`} fill className="object-cover" />
@@ -213,7 +221,6 @@ export default function AddProductPage() {
                 </div>
               ))}
 
-              {/* Upload trigger button */}
               <label className="relative aspect-[3/4] border-2 border-dashed border-black/20 hover:border-retro-orange flex flex-col items-center justify-center cursor-pointer bg-surface hover:bg-white transition-colors p-2 text-center">
                 <Camera size={26} className="text-muted group-hover:text-retro-orange mb-1" />
                 <span className="text-[11px] font-bold uppercase tracking-wide text-ink">
@@ -233,7 +240,7 @@ export default function AddProductPage() {
 
           {/* 2. Product Name */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
               {t('admin_name_label')} <span className="text-retro-orange">*</span>
             </label>
             <input
@@ -242,110 +249,96 @@ export default function AddProductPage() {
               placeholder={t('admin_name_placeholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border border-black/10 bg-surface px-3.5 py-3 text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
+              className="w-full border border-black/10 bg-surface px-3.5 py-2.5 text-sm font-semibold text-ink focus:outline-none focus:border-ink rounded-none"
             />
           </div>
 
-          {/* 3. Category & Price */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                {t('admin_category_label')} <span className="text-retro-orange">*</span>
-              </label>
-              <select
-                value={category}
-                onChange={(e) => {
-                  const newCat = e.target.value as Category;
-                  setCategory(newCat);
-                  if (newCat === 'jeans' || newCat === 'trousers') {
-                    applyPresetSizes(PRESET_JEANS_SIZES);
-                  } else {
-                    applyPresetSizes(PRESET_CLOTHING_SIZES);
-                  }
-                }}
-                className="w-full border border-black/10 bg-surface px-3.5 py-3 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.key} value={cat.key}>
-                    {getCategoryText(cat.key)}
-                  </option>
-                ))}
-              </select>
+          {/* 3. Category with 1-click pills */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
+              {t('admin_category_label')} <span className="text-retro-orange">*</span>
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => applyCategory(cat.key)}
+                  className={`px-3 py-1.5 text-xs font-bold uppercase tracking-wider border transition-all ${
+                    category === cat.key
+                      ? 'bg-ink text-white border-ink'
+                      : 'bg-surface text-ink border-black/10 hover:border-ink'
+                  }`}
+                >
+                  {getCategoryText(cat.key)}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                {t('admin_price_label')} <span className="text-retro-orange">*</span>
-              </label>
+          {/* 4. Price with Quick Presets */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
+              {t('admin_price_label')} <span className="text-retro-orange">*</span>
+            </label>
+            <div className="flex items-center gap-2 mb-2">
               <input
                 type="number"
                 required
                 min="0"
                 step="50"
-                placeholder="1890"
+                placeholder="1490"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full border border-black/10 bg-surface px-3.5 py-3 text-sm font-bold text-ink focus:outline-none focus:border-ink rounded-none"
+                className="w-full border border-black/10 bg-surface px-3.5 py-2 text-base font-bold text-ink focus:outline-none focus:border-ink rounded-none"
               />
+              <span className="font-display text-lg text-ink font-bold shrink-0">den.</span>
+            </div>
+            {/* Quick price presets */}
+            <div className="flex flex-wrap gap-1">
+              {PRICE_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPrice(String(p))}
+                  className={`px-2 py-0.5 text-[11px] font-bold border transition-colors ${
+                    price === String(p)
+                      ? 'bg-ink text-white border-ink'
+                      : 'bg-surface text-muted border-black/10 hover:border-ink hover:text-ink'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* 4. Sizes & Stock Quantities */}
-          <div className="space-y-3 pt-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-ink">
-                {t('admin_sizes_label')} <span className="text-retro-orange">*</span>
-              </label>
+          {/* 5. Sizes & Stock Quantities */}
+          <div className="space-y-2 pt-1">
+            <label className="block text-xs font-bold uppercase tracking-wider text-ink">
+              {t('admin_sizes_label')} <span className="text-retro-orange">*</span>
+            </label>
 
-              {/* Fast presets */}
-              <div className="flex gap-2 text-[11px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => applyPresetSizes(PRESET_CLOTHING_SIZES)}
-                  className="px-2.5 py-1 bg-surface border border-black/10 hover:border-ink text-ink"
-                >
-                  S–XXL
-                </button>
-                <button
-                  type="button"
-                  onClick={() => applyPresetSizes(PRESET_JEANS_SIZES)}
-                  className="px-2.5 py-1 bg-surface border border-black/10 hover:border-ink text-ink"
-                >
-                  30–36
-                </button>
-              </div>
-            </div>
-
-            {/* List of size stock rows */}
-            <div className="space-y-2 bg-surface p-3 border border-black/10">
+            <div className="space-y-1.5 bg-surface p-3 border border-black/10">
               {variants.map((v, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-white p-2.5 border border-black/10">
+                <div key={idx} className="flex items-center justify-between bg-white p-2 border border-black/10">
                   <span className="font-bold text-sm text-ink w-12">{v.size}</span>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(idx, -1)}
-                      className="w-8 h-8 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-sm flex items-center justify-center transition-colors"
+                      className="w-7 h-7 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-xs flex items-center justify-center transition-colors"
                     >
                       -
                     </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={v.stock_quantity}
-                      onChange={(e) => {
-                        const val = Math.max(0, parseInt(e.target.value) || 0);
-                        setVariants((prev) =>
-                          prev.map((item, i) => (i === idx ? { ...item, stock_quantity: val } : item))
-                        );
-                      }}
-                      className="w-14 text-center font-bold text-sm bg-surface border border-black/10 py-1"
-                    />
+                    <span className="w-8 text-center font-bold text-sm text-ink">
+                      {v.stock_quantity}
+                    </span>
                     <button
                       type="button"
                       onClick={() => handleQuantityChange(idx, 1)}
-                      className="w-8 h-8 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-sm flex items-center justify-center transition-colors"
+                      className="w-7 h-7 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-xs flex items-center justify-center transition-colors"
                     >
                       +
                     </button>
@@ -353,28 +346,28 @@ export default function AddProductPage() {
                     <button
                       type="button"
                       onClick={() => handleRemoveVariant(idx)}
-                      className="p-1.5 text-muted hover:text-red-600 ml-2"
+                      className="p-1 text-muted hover:text-red-600 ml-1"
                       title="Delete size"
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
               ))}
 
               {/* Add Custom Size input */}
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2 pt-1">
                 <input
                   type="text"
                   placeholder={t('admin_size_custom_placeholder')}
                   value={customSize}
                   onChange={(e) => setCustomSize(e.target.value)}
-                  className="flex-1 px-3 py-1.5 text-xs bg-white border border-black/10"
+                  className="flex-1 px-3 py-1 text-xs bg-white border border-black/10"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomSize}
-                  className="px-3 py-1.5 bg-ink text-white hover:bg-retro-orange hover:text-white text-xs font-bold uppercase transition-colors"
+                  className="px-3 py-1 bg-ink text-white hover:bg-retro-orange hover:text-white text-xs font-bold uppercase transition-colors"
                 >
                   {t('admin_size_custom_btn')}
                 </button>
@@ -382,22 +375,8 @@ export default function AddProductPage() {
             </div>
           </div>
 
-          {/* 5. Description (Optional) */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-              {t('admin_desc_label')} <span className="text-muted font-normal text-[10px]">{t('admin_optional')}</span>
-            </label>
-            <textarea
-              rows={3}
-              placeholder={t('admin_desc_placeholder')}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full border border-black/10 bg-surface p-3 text-sm text-ink focus:outline-none focus:border-ink rounded-none"
-            />
-          </div>
-
           {/* 6. Mark as NEW Flag */}
-          <div className="p-4 bg-surface border border-black/10 flex items-center justify-between gap-3">
+          <div className="p-3.5 bg-surface border border-black/10 flex items-center justify-between gap-3">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-ink block">
                 ⭐ {t('admin_is_new_label')}
@@ -410,7 +389,7 @@ export default function AddProductPage() {
             <button
               type="button"
               onClick={() => setIsNew(!isNew)}
-              className={`px-3.5 py-2 font-bold text-xs uppercase tracking-wider border transition-all shrink-0 ${
+              className={`px-3.5 py-1.5 font-bold text-xs uppercase tracking-wider border transition-all shrink-0 ${
                 isNew
                   ? 'bg-retro-orange text-white border-retro-orange shadow-sm'
                   : 'bg-white text-muted border-black/10 hover:border-ink hover:text-ink'
@@ -431,7 +410,7 @@ export default function AddProductPage() {
           <button
             type="submit"
             disabled={isSubmitting || isUploading}
-            className={`w-full py-4 bg-ink text-white hover:bg-retro-orange hover:text-white font-bold text-sm uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
+            className={`w-full py-3.5 bg-ink text-white hover:bg-retro-orange hover:text-white font-bold text-sm uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
               isSubmitting ? 'opacity-50 cursor-wait' : ''
             }`}
           >

@@ -72,6 +72,11 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
               sizes="(max-width: 1024px) 100vw, 60vw"
             />
 
+            {product.is_new && !isOutOfStock && (
+              <div className="absolute top-4 left-4 px-3 py-1.5 bg-retro-orange text-white text-xs font-extrabold uppercase tracking-widest shadow-md">
+                NEW ⭐
+              </div>
+            )}
             {isOutOfStock && (
               <div className="absolute top-4 left-4 px-3 py-1.5 bg-ink/90 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
                 {t('sold_out')}
@@ -101,9 +106,16 @@ export function ProductDetailClient({ product: initialProduct }: ProductDetailCl
         <div className="lg:col-span-5 space-y-8 bg-white border border-ink/10 p-6 sm:p-8">
           <div className="space-y-2 border-b border-ink/10 pb-6">
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase font-extrabold tracking-widest text-retro-orange">
-                {getCategoryText(product.category)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase font-extrabold tracking-widest text-retro-orange">
+                  {getCategoryText(product.category)}
+                </span>
+                {product.is_new && (
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-retro-orange text-white">
+                    NEW
+                  </span>
+                )}
+              </div>
               <span className="text-xs text-muted font-medium">Stiv Naumov 8, Prilep</span>
             </div>
 
