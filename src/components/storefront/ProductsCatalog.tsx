@@ -19,80 +19,68 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
 
   const filteredProducts = useMemo(() => {
-    return initialProducts.filter((product) => {
-      // Category filter
-      if (selectedCategory !== 'all' && product.category !== selectedCategory) {
-        return false;
-      }
-
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        const matchesName = product.name.toLowerCase().includes(query);
-        const matchesDesc = product.description?.toLowerCase().includes(query);
-        if (!matchesName && !matchesDesc) return false;
-      }
-
-      // Stock filter
-      if (onlyInStock) {
-        const totalAvail =
-          product.variants?.reduce(
-            (acc, v) => acc + Math.max(0, v.stock_quantity - v.reserved_quantity),
-            0
-          ) ?? 0;
-        if (totalAvail <= 0) return false;
-      }
-
-      return true;
-    }).sort((a, b) => {
-      if (sortBy === 'price_asc') return a.price - b.price;
-      if (sortBy === 'price_desc') return b.price - a.price;
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
+    return initialProducts
+      .filter((product) => {
+        if (selectedCategory !== 'all' && product.category !== selectedCategory) return false;
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          if (!product.name.toLowerCase().includes(q) && !product.description?.toLowerCase().includes(q)) return false;
+        }
+        if (onlyInStock) {
+          const avail = product.variants?.reduce((acc, v) => acc + Math.max(0, v.stock_quantity - v.reserved_quantity), 0) ?? 0;
+          if (avail <= 0) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price_asc') return a.price - b.price;
+        if (sortBy === 'price_desc') return b.price - a.price;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
   }, [initialProducts, selectedCategory, searchQuery, onlyInStock, sortBy]);
 
   return (
-    <div className="space-y-8">
-      {/* Page Header with Live Translation */}
-      <div className="border-b border-ink/10 pb-8 space-y-2">
-        <span className="text-xs uppercase font-extrabold tracking-widest text-retro-orange block">
-          RETRO BOUTIQUE · PRILEP
-        </span>
-        <h1 className="font-display text-5xl sm:text-7xl uppercase text-ink leading-none">
-          {language === 'mk' ? 'Машка Колекција' : "Men's Collection"}
+    <div className="space-y-10">
+      {/* Page header */}
+      <div className="pb-10 border-b border-black/[0.06] space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="h-px w-8 bg-retro-orange" />
+          <span className="section-eyebrow">RETRO BOUTIQUE · PRILEP</span>
+        </div>
+        <h1 className="font-display text-6xl sm:text-8xl uppercase text-ink leading-none tracking-tight">
+          {language === 'mk' ? "Машка Колекција" : "Men's Collection"}
         </h1>
-        <p className="text-sm sm:text-base text-muted-dark max-w-xl">
+        <p className="text-sm text-muted max-w-xl leading-relaxed">
           {language === 'mk'
             ? 'Избери големина и резервирај онлајн. Подигнување и плаќање исклучиво во продавницата на Stiv Naumov 8 во Прилеп.'
-            : 'Select your size and reserve online. Pickup and payment exclusively at our physical store at Stiv Naumov 8 in Prilep.'}
+            : 'Select your size and reserve online. Pickup and payment exclusively at our store at Stiv Naumov 8 in Prilep.'}
         </p>
       </div>
 
-      {/* Category Pills & Filters Bar */}
-      <div className="bg-white border border-ink/10 p-4 sm:p-6 space-y-4">
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-none">
+      {/* Filters bar */}
+      <div className="bg-white border border-black/[0.06] p-5 space-y-4 shadow-card">
+        {/* Category tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
           <button
             onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-2 text-xs uppercase tracking-wider font-bold shrink-0 border transition-all ${
+            className={`shrink-0 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] border transition-all duration-200 ${
               selectedCategory === 'all'
                 ? 'bg-ink text-white border-ink'
-                : 'bg-paper text-ink border-ink/10 hover:border-ink'
+                : 'border-black/10 text-muted hover:border-ink hover:text-ink'
             }`}
           >
             {t('cat_all')} ({initialProducts.length})
           </button>
           {CATEGORIES.map((cat) => {
             const count = initialProducts.filter((p) => p.category === cat.key).length;
-            const isSelected = selectedCategory === cat.key;
             return (
               <button
                 key={cat.key}
                 onClick={() => setSelectedCategory(cat.key)}
-                className={`px-4 py-2 text-xs uppercase tracking-wider font-bold shrink-0 border transition-all ${
-                  isSelected
+                className={`shrink-0 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.12em] border transition-all duration-200 ${
+                  selectedCategory === cat.key
                     ? 'bg-ink text-white border-ink'
-                    : 'bg-paper text-ink border-ink/10 hover:border-ink'
+                    : 'border-black/10 text-muted hover:border-ink hover:text-ink'
                 }`}
               >
                 {getCategoryText(cat.key)} ({count})
@@ -101,40 +89,36 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
           })}
         </div>
 
-        {/* Search, Sort and In-Stock Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-ink/10">
-          {/* Search Input */}
-          <div className="relative flex-1 max-w-md">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+        {/* Search + controls row */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 border-t border-black/[0.06]">
+          <div className="relative flex-1 max-w-sm">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted/60" />
             <input
               type="text"
               placeholder={t('search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-xs bg-paper border border-ink/15 text-ink placeholder:text-muted focus:outline-none focus:border-ink"
+              className="w-full pl-9 pr-4 py-2.5 text-xs bg-surface border border-black/[0.06] text-ink placeholder:text-muted/50 focus:outline-none focus:border-ink/30 transition-colors"
             />
           </div>
 
-          {/* Right controls */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* In stock toggle */}
-            <label className="flex items-center gap-2 text-xs font-semibold text-ink cursor-pointer select-none">
+          <div className="flex items-center gap-4 ml-auto">
+            <label className="flex items-center gap-2 text-xs font-semibold text-muted cursor-pointer select-none hover:text-ink transition-colors">
               <input
                 type="checkbox"
                 checked={onlyInStock}
                 onChange={(e) => setOnlyInStock(e.target.checked)}
-                className="rounded text-retro-orange focus:ring-retro-orange w-4 h-4"
+                className="rounded accent-retro-orange w-3.5 h-3.5"
               />
               <span>{t('only_in_stock')}</span>
             </label>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
-              <SlidersHorizontal size={14} className="text-muted" />
+            <div className="flex items-center gap-1.5">
+              <SlidersHorizontal size={13} className="text-muted/60" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="bg-paper border border-ink/15 text-ink px-2.5 py-2 text-xs font-semibold focus:outline-none focus:border-ink"
+                className="bg-surface border border-black/[0.06] text-ink px-3 py-2 text-xs font-medium focus:outline-none focus:border-ink/30 transition-colors"
               >
                 <option value="newest">{t('sort_newest')}</option>
                 <option value="price_asc">{t('sort_price_asc')}</option>
@@ -145,27 +129,28 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         </div>
       </div>
 
-      {/* Products Grid or Empty State */}
+      {/* Results count */}
+      {filteredProducts.length > 0 && (
+        <p className="text-xs text-muted font-medium">
+          {filteredProducts.length} {language === 'mk' ? 'производи' : 'products'}
+        </p>
+      )}
+
+      {/* Grid or empty state */}
       {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {filteredProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-ink/10 p-12 text-center space-y-4 max-w-md mx-auto">
-          <PackageOpen size={48} className="mx-auto text-muted/50" />
-          <h3 className="font-display text-2xl uppercase text-ink">{t('no_products_found')}</h3>
-          <p className="text-xs text-muted leading-relaxed">
-            {t('no_products_desc')}
-          </p>
+        <div className="py-24 text-center space-y-4">
+          <PackageOpen size={40} className="mx-auto text-muted/30" />
+          <h3 className="font-display text-3xl uppercase text-ink">{t('no_products_found')}</h3>
+          <p className="text-sm text-muted">{t('no_products_desc')}</p>
           <button
-            onClick={() => {
-              setSelectedCategory('all');
-              setSearchQuery('');
-              setOnlyInStock(false);
-            }}
-            className="px-6 py-2.5 bg-ink text-white font-bold text-xs uppercase tracking-wider hover:bg-retro-orange hover:text-ink transition-colors"
+            onClick={() => { setSelectedCategory('all'); setSearchQuery(''); setOnlyInStock(false); }}
+            className="mt-2 px-6 py-3 bg-ink text-white text-xs font-semibold uppercase tracking-wider hover:bg-retro-orange transition-colors duration-200"
           >
             {t('reset_filters')}
           </button>

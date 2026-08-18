@@ -10,61 +10,89 @@ export function HeroSection() {
   const { t } = useLanguage();
 
   return (
-    <section className="relative w-full min-h-[85vh] flex items-end pb-16 sm:pb-24 px-4 sm:px-12 overflow-hidden bg-ink">
+    <section className="relative w-full min-h-[92vh] flex items-end overflow-hidden bg-ink">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/assets/store-02.jpg"
-          alt="Retro Boutique Prilep storefront"
+          alt="Retro Boutique Prilep"
           fill
           priority
-          className="object-cover object-center filter saturate-75 contrast-105"
+          className="object-cover object-center scale-[1.02]"
+          style={{ filter: 'brightness(0.55) saturate(0.85)' }}
         />
-        {/* Dark Editorial Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-ink/20" />
+        {/* Gradient — stronger at bottom for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
+        {/* Side vignette */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent" />
       </div>
 
-      {/* Hero Content Box */}
-      <div className="relative z-10 max-w-4xl text-white space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-retro-orange/90 text-ink text-xs uppercase font-extrabold tracking-widest rounded-sm">
-          <span>{t('hero_eyebrow')}</span>
+      {/* Content */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 pb-16 sm:pb-24 flex flex-col lg:flex-row items-end justify-between gap-10">
+
+        {/* Left: Main headline */}
+        <div className="space-y-7 max-w-3xl">
+          {/* Eyebrow */}
+          <div className="flex items-center gap-3">
+            <div className="h-px w-8 bg-retro-orange" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-retro-orange">
+              {t('hero_eyebrow')}
+            </span>
+          </div>
+
+          {/* Main Title */}
+          <h1 className="font-display leading-[0.88] tracking-tight">
+            <span className="block text-white text-7xl sm:text-9xl md:text-[10rem]">
+              {t('hero_title_1')}
+            </span>
+            <span
+              className="block text-7xl sm:text-9xl md:text-[10rem]"
+              style={{
+                WebkitTextStroke: '1.5px rgba(255,255,255,0.7)',
+                color: 'transparent',
+              }}
+            >
+              {t('hero_title_2')}
+            </span>
+          </h1>
+
+          {/* Description */}
+          <p className="text-white/65 text-sm sm:text-base max-w-lg leading-relaxed font-light">
+            {t('hero_desc')}
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-start gap-3 pt-2">
+            <Link
+              href="/products"
+              className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-ink font-semibold text-sm tracking-wide hover:bg-retro-orange hover:text-white transition-all duration-300 active:scale-[0.98]"
+            >
+              <span>{t('hero_cta_shop')}</span>
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+            </Link>
+            <Link
+              href="/#visit"
+              className="inline-flex items-center gap-2 px-8 py-4 border border-white/25 text-white/80 hover:border-white hover:text-white font-medium text-sm tracking-wide transition-all duration-300 backdrop-blur-sm"
+            >
+              <MapPin size={14} className="text-retro-orange" />
+              <span>{t('hero_cta_visit')}</span>
+            </Link>
+          </div>
         </div>
 
-        <h1 className="font-display text-6xl sm:text-8xl md:text-9xl leading-[0.85] tracking-tight uppercase">
-          {t('hero_title_1')} <br />
-          <span className="text-transparent" style={{ WebkitTextStroke: '2px rgba(255,255,255,0.9)' }}>
-            {t('hero_title_2')}
-          </span>
-        </h1>
-
-        <p className="text-base sm:text-xl text-white/80 max-w-xl font-normal leading-relaxed">
-          {t('hero_desc')}
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-          <Link
-            href="/products"
-            className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white hover:bg-retro-orange text-ink hover:text-white font-bold text-sm tracking-wider uppercase transition-all transform hover:-translate-y-0.5 shadow-lg"
-          >
-            <span>{t('hero_cta_shop')}</span>
-            <ArrowRight size={18} />
-          </Link>
-
-          <Link
-            href="/#visit"
-            className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-ink/70 hover:bg-ink text-white border border-white/20 hover:border-white/60 font-semibold text-sm tracking-wider uppercase backdrop-blur-sm transition-all"
-          >
-            <MapPin size={16} className="text-retro-orange" />
-            <span>{t('hero_cta_visit')}</span>
-          </Link>
+        {/* Right: EST badge — desktop only */}
+        <div className="hidden lg:flex flex-col items-center gap-1 mb-2 opacity-80 hover:opacity-100 transition-opacity">
+          <div className="w-[1px] h-16 bg-white/20 mb-4" />
+          <span className="text-[9px] tracking-[0.3em] uppercase text-retro-orange font-bold">EST.</span>
+          <span className="font-display text-5xl text-white leading-none">2003</span>
+          <span className="text-[9px] tracking-[0.25em] uppercase text-white/40 font-medium mt-1">PRILEP, MK</span>
+          <div className="w-[1px] h-16 bg-white/20 mt-4" />
         </div>
       </div>
 
-      {/* Established Badge */}
-      <div className="hidden lg:flex absolute right-12 bottom-12 z-10 w-36 h-36 rounded-full border border-white/40 flex-col items-center justify-center text-center text-white backdrop-blur-md bg-black/20 transform rotate-6 hover:rotate-0 transition-transform duration-300">
-        <span className="text-[10px] tracking-widest uppercase font-bold text-retro-orange">EST.</span>
-        <span className="font-display text-4xl leading-none">2003</span>
-        <span className="text-[9px] tracking-widest uppercase font-semibold text-white/70">PRILEP</span>
+      {/* Scroll indicator */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 hidden sm:flex flex-col items-center gap-2 opacity-40">
+        <div className="w-[1px] h-10 bg-white animate-pulse" />
       </div>
     </section>
   );

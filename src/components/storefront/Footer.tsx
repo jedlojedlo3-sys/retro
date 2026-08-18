@@ -7,88 +7,85 @@ import { Instagram, MapPin, Clock, Shield } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
   const { t } = useLanguage();
 
   return (
-    <footer className="bg-ink text-white pt-14 pb-8 px-4 sm:px-8 border-t border-ink/20 mt-auto">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 pb-12 border-b border-white/10">
-        {/* Col 1: Brand Info */}
-        <div className="space-y-4">
+    <footer className="bg-ink text-white">
+      {/* Main footer grid */}
+      <div className="max-w-7xl mx-auto px-6 sm:px-12 py-16 sm:py-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+        {/* Brand */}
+        <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/20">
-              <Image
-                src="/assets/logo-retro.png"
-                alt="Retro Boutique"
-                fill
-                className="object-cover"
-                sizes="40px"
-              />
+            <div className="relative w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/15">
+              <Image src="/assets/logo-retro.png" alt="Retro Boutique" fill className="object-cover" sizes="40px" />
             </div>
             <div>
-              <span className="font-display text-2xl tracking-wider block">RETRO BOUTIQUE</span>
-              <span className="text-[11px] text-white/50 uppercase tracking-widest block -mt-1">
-                Prilep · Est. 2003
+              <span className="font-display text-2xl tracking-wide block">RETRO BOUTIQUE</span>
+              <span className="text-[9px] tracking-[0.2em] uppercase text-white/30 block">Prilep · Est. 2003</span>
+            </div>
+          </div>
+          <p className="text-sm text-white/45 leading-relaxed max-w-xs">
+            {t('footer_about')}
+          </p>
+          <a
+            href="https://www.instagram.com/retro_boutique/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/50 hover:text-white transition-colors duration-200"
+          >
+            <Instagram size={14} />
+            <span>@retro_boutique</span>
+          </a>
+        </div>
+
+        {/* Location */}
+        <div className="space-y-5">
+          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+            {t('visit_address_label')}
+          </h4>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-start gap-2.5 text-white/60">
+              <MapPin size={15} className="text-retro-orange shrink-0 mt-0.5" />
+              <span>Stiv Naumov 8<br />Prilep 7500<br />North Macedonia</span>
+            </div>
+            <div className="flex items-start gap-2.5 text-white/60">
+              <Clock size={15} className="text-retro-orange shrink-0 mt-0.5" />
+              <span>
+                {t('visit_mon_sat')} 09:00–20:00<br />
+                <span className="text-white/30">{t('visit_sun')} {t('visit_closed')}</span>
               </span>
             </div>
           </div>
-          <p className="text-sm text-white/70 leading-relaxed max-w-sm">
-            {t('footer_about')}
-          </p>
         </div>
 
-        {/* Col 2: Location & Hours */}
-        <div className="space-y-3">
-          <h4 className="font-display text-lg tracking-wider uppercase text-retro-orange">
-            {t('visit_hours_label')}
-          </h4>
-          <div className="space-y-2 text-sm text-white/80">
-            <p className="flex items-start gap-2">
-              <MapPin size={18} className="text-retro-orange shrink-0 mt-0.5" />
-              <span>Stiv Naumov 8, Prilep 7500, North Macedonia</span>
-            </p>
-            <p className="flex items-start gap-2">
-              <Clock size={18} className="text-retro-orange shrink-0 mt-0.5" />
-              <span>
-                {t('visit_mon_sat')} <strong>09:00 – 20:00</strong>
-                <br />
-                {t('visit_sun')} <span className="text-white/50">{t('visit_closed')}</span>
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* Col 3: Click & Collect Details */}
-        <div className="space-y-3">
-          <h4 className="font-display text-lg tracking-wider uppercase text-retro-orange">
+        {/* Click & Collect */}
+        <div className="space-y-5">
+          <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
             Click & Collect
           </h4>
-          <p className="text-sm text-white/70 leading-relaxed">
+          <p className="text-sm text-white/45 leading-relaxed">
             {t('footer_click_collect_desc')}
           </p>
-          <div className="pt-2">
-            <a
-              href="https://www.instagram.com/retro_boutique/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs uppercase tracking-wider font-semibold transition-colors"
-            >
-              <Instagram size={16} className="text-retro-orange" />
-              <span>{t('footer_instagram_btn')}</span>
-            </a>
-          </div>
+          <Link
+            href="/products"
+            className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/50 hover:text-white link-underline transition-colors duration-200"
+          >
+            <span>{t('nav_collection')}</span>
+          </Link>
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="max-w-7xl mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-white/40 gap-4">
-        <span>© {currentYear} Retro Boutique Prilep. {t('footer_rights')}</span>
-        <div className="flex items-center gap-6">
-          <Link href="/admin" className="hover:text-white/80 flex items-center gap-1 transition-colors">
-            <Shield size={13} />
-            <span>{t('nav_admin')}</span>
-          </Link>
-        </div>
+      <div className="border-t border-white/[0.06] max-w-7xl mx-auto px-6 sm:px-12 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-white/25 tracking-wide">
+        <span>© {year} Retro Boutique Prilep. {t('footer_rights')}</span>
+        <Link
+          href="/admin"
+          className="flex items-center gap-1.5 hover:text-white/60 transition-colors duration-200"
+        >
+          <Shield size={11} />
+          <span>{t('nav_admin')}</span>
+        </Link>
       </div>
     </footer>
   );
