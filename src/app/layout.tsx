@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://retro-boutique.vercel.app'),
@@ -77,7 +78,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-paper text-ink selection:bg-retro-orange selection:text-white">
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

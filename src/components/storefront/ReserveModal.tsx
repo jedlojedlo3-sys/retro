@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { X, CheckCircle2, AlertCircle, MapPin, Clock } from 'lucide-react';
-import { Product, ProductVariant } from '@/types/database';
+import { X, AlertCircle, MapPin } from 'lucide-react';
+import { Product } from '@/types/database';
 import { formatPrice } from '@/lib/utils';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 interface ReserveModalProps {
   product: Product;
@@ -21,6 +22,7 @@ export function ReserveModal({
   onClose,
 }: ReserveModalProps) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Find initial available variant
   const availableVariants = (product.variants || []).filter(
@@ -49,17 +51,17 @@ export function ReserveModal({
     setErrorMessage(null);
 
     if (!selectedVariantId) {
-      setErrorMessage('Ве молиме изберете големина.');
+      setErrorMessage(t('err_select_size'));
       return;
     }
 
     if (!customerName.trim()) {
-      setErrorMessage('Ве молиме внесете име и презиме.');
+      setErrorMessage(t('err_enter_name'));
       return;
     }
 
     if (!customerPhone.trim()) {
-      setErrorMessage('Ве молиме внесете телефонски број за контакт.');
+      setErrorMessage(t('err_enter_phone'));
       return;
     }
 
@@ -85,13 +87,13 @@ export function ReserveModal({
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Се појави грешка при резервацијата.');
+        throw new Error(data.error || 'Failed to complete reservation.');
       }
 
       // Successful reservation -> redirect to confirmation page
       router.push(`/reservation/${data.data.reservation_number}`);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Се појави неочекувана грешка. Обидете се повторно.');
+      setErrorMessage(err.message || 'Error creating reservation. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -108,12 +110,12 @@ export function ReserveModal({
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-retro-orange block">
               CLICK & COLLECT
             </span>
-            <h2 className="font-display text-2xl tracking-wide text-ink">Резервирај за подигање</h2>
+            <h2 className="font-display text-2xl tracking-wide text-ink">{t('modal_title')}</h2>
           </div>
           <button
             onClick={onClose}
             className="p-1 text-ink/70 hover:text-ink hover:bg-paper rounded-none transition-colors"
-            aria-label="Затвори"
+            aria-label="Close"
           >
             <X size={22} />
           </button>
@@ -135,7 +137,7 @@ export function ReserveModal({
               <h4 className="font-bold text-sm text-ink truncate">{product.name}</h4>
               <p className="font-display text-xl text-ink font-normal">{formatPrice(product.price)}</p>
               <p className="text-xs text-muted">
-                {currentVariant ? `Избрана големина: ${currentVariant.size}` : 'Изберете големина подолу'}
+                {currentVariant ? `${t('choose_size')} ${currentVariant.size}` : t('choose_size')}
               </p>
             </div>
           </div>
@@ -145,7 +147,7 @@ export function ReserveModal({
             {/* Size Selector */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-2">
-                Избери големина <span className="text-retro-orange">*</span>
+                {t('modal_size_label')} <span className="text-retro-orange">*</span>
               </label>
               <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                 {product.variants?.map((variant) => {
@@ -172,7 +174,7 @@ export function ReserveModal({
                     >
                       <span className="text-sm">{variant.size}</span>
                       <span className="text-[9px] font-normal opacity-80">
-                        {isAvailable ? `${avail} на залиха` : 'Нема'}
+                        {isAvailable ? `${avail} in stock` : '0'}
                       </span>
                     </button>
                   );
@@ -184,7 +186,7 @@ export function ReserveModal({
             {availableQty > 1 && (
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1.5">
-                  Количина
+                  {t('modal_qty_label')}
                 </label>
                 <div className="flex items-center gap-3">
                   <select
@@ -194,12 +196,12 @@ export function ReserveModal({
                   >
                     {Array.from({ length: Math.min(availableQty, 5) }, (_, i) => i + 1).map((num) => (
                       <option key={num} value={num}>
-                        {num} {num === 1 ? 'парче' : 'парчиња'}
+                        {num} {num === 1 ? t('modal_item_singular') : t('modal_item_plural')}
                       </option>
                     ))}
                   </select>
                   <span className="text-xs text-muted">
-                    Вкупно: <strong>{formatPrice(product.price * quantity)}</strong>
+                    {t('modal_total')} <strong>{formatPrice(product.price * quantity)}</strong>
                   </span>
                 </div>
               </div>
@@ -209,12 +211,12 @@ export function ReserveModal({
             <div className="space-y-3 pt-2">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
-                  Име и презиме <span className="text-retro-orange">*</span>
+                  {t('modal_name_label')} <span className="text-retro-orange">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Пр. Марко Петров"
+                  placeholder={t('modal_name_placeholder')}
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   className="w-full border border-ink/20 bg-white text-ink px-3.5 py-2.5 text-sm focus:outline-none focus:border-ink"
@@ -223,12 +225,12 @@ export function ReserveModal({
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
-                  Телефонски број <span className="text-retro-orange">*</span>
+                  {t('modal_phone_label')} <span className="text-retro-orange">*</span>
                 </label>
                 <input
                   type="tel"
                   required
-                  placeholder="07x xxx xxx"
+                  placeholder={t('modal_phone_placeholder')}
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   className="w-full border border-ink/20 bg-white text-ink px-3.5 py-2.5 text-sm focus:outline-none focus:border-ink"
@@ -237,7 +239,7 @@ export function ReserveModal({
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink mb-1">
-                  Е-пошта <span className="text-muted text-[10px] font-normal">(опционално)</span>
+                  {t('modal_email_label')} <span className="text-muted text-[10px] font-normal">{t('modal_email_optional')}</span>
                 </label>
                 <input
                   type="email"
@@ -261,10 +263,10 @@ export function ReserveModal({
             <div className="p-3.5 bg-paper-dark/60 border border-ink/10 text-xs text-ink/80 space-y-1.5">
               <div className="flex items-center gap-1.5 font-bold text-ink">
                 <MapPin size={14} className="text-retro-orange" />
-                <span>Подигање: Stiv Naumov 8, Prilep</span>
+                <span>Stiv Naumov 8, Prilep</span>
               </div>
               <p className="text-[11px] leading-relaxed text-muted">
-                * Ова е резервација, а не онлајн купување. Плаќањето се врши во продавницата при подигнување на производот. Резервацијата важи 48 часа.
+                {t('modal_notice')}
               </p>
             </div>
           </form>
@@ -273,7 +275,7 @@ export function ReserveModal({
         {/* Footer */}
         <div className="p-4 sm:p-5 border-t border-ink/10 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="w-full sm:w-auto text-center sm:text-left">
-            <span className="text-[11px] uppercase tracking-wider text-muted block">Вкупно:</span>
+            <span className="text-[11px] uppercase tracking-wider text-muted block">{t('modal_total')}</span>
             <span className="font-display text-2xl text-ink leading-tight">
               {formatPrice(product.price * quantity)}
             </span>
@@ -285,7 +287,7 @@ export function ReserveModal({
               onClick={onClose}
               className="flex-1 sm:flex-initial px-4 py-3 border border-ink/20 text-ink hover:bg-paper text-xs uppercase tracking-wider font-bold transition-colors"
             >
-              Откажи
+              {t('modal_cancel')}
             </button>
             <button
               type="submit"
@@ -295,7 +297,7 @@ export function ReserveModal({
                 isSubmitting ? 'opacity-50 cursor-wait' : ''
               }`}
             >
-              {isSubmitting ? 'Се обработува...' : 'Потврди резервација'}
+              {isSubmitting ? t('modal_processing') : t('modal_confirm')}
             </button>
           </div>
         </div>

@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Check, ShieldCheck, MapPin, Clock, Share2 } from 'lucide-react';
-import { Product, ProductVariant } from '@/types/database';
-import { formatPrice, getCategoryLabel } from '@/lib/utils';
+import { ArrowLeft, MapPin, Clock, ShieldCheck } from 'lucide-react';
+import { Product } from '@/types/database';
+import { formatPrice } from '@/lib/utils';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { ReserveModal } from './ReserveModal';
 
 interface ProductDetailClientProps {
@@ -13,6 +14,7 @@ interface ProductDetailClientProps {
 }
 
 export function ProductDetailClient({ product }: ProductDetailClientProps) {
+  const { t, getCategoryText } = useLanguage();
   const allImages = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
   const [selectedImage, setSelectedImage] = useState<string>(allImages[0] || '/assets/look-01.jpg');
 
@@ -41,7 +43,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           className="inline-flex items-center gap-2 text-xs uppercase tracking-wider font-bold text-ink hover:text-retro-orange transition-colors"
         >
           <ArrowLeft size={16} />
-          <span>Назад кон колекцијата</span>
+          <span>{t('back_to_catalog')}</span>
         </Link>
       </div>
 
@@ -62,7 +64,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
             {isOutOfStock && (
               <div className="absolute top-4 left-4 px-3 py-1.5 bg-ink/90 text-white text-xs font-bold uppercase tracking-wider backdrop-blur-sm">
-                Распродадено
+                {t('sold_out')}
               </div>
             )}
           </div>
@@ -90,7 +92,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="space-y-2 border-b border-ink/10 pb-6">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase font-extrabold tracking-widest text-retro-orange">
-                {getCategoryLabel(product.category)}
+                {getCategoryText(product.category)}
               </span>
               <span className="text-xs text-muted font-medium">Stiv Naumov 8, Prilep</span>
             </div>
@@ -108,13 +110,13 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase font-bold tracking-wider text-ink">
-                Избери големина:
+                {t('choose_size')}
               </span>
               {selectedVariant && (
                 <span className="text-xs text-muted">
-                  Залиха:{' '}
+                  {t('stock_label')}{' '}
                   <strong className="text-ink">
-                    {Math.max(0, selectedVariant.stock_quantity - selectedVariant.reserved_quantity)} парчиња
+                    {Math.max(0, selectedVariant.stock_quantity - selectedVariant.reserved_quantity)} {t('pieces')}
                   </strong>
                 </span>
               )}
@@ -142,7 +144,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   >
                     <span className="text-sm">{variant.size}</span>
                     <span className="text-[9px] font-normal opacity-80 mt-0.5">
-                      {isAvailable ? `${avail} пар.` : 'Нема'}
+                      {isAvailable ? `${avail} ${t('pieces_short')}` : t('no_stock')}
                     </span>
                   </button>
                 );
@@ -161,18 +163,18 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   : 'bg-ink text-white hover:bg-retro-orange hover:text-ink'
               }`}
             >
-              {isOutOfStock ? 'Нема достапна залиха' : 'Резервирај за подигање во продавница'}
+              {isOutOfStock ? t('btn_no_stock_detail') : t('btn_reserve_store')}
             </button>
 
             <p className="text-[11px] text-center text-muted">
-              * Резервацијата те чека во продавницата 48 часа. Плаќање при подигнување.
+              {t('notice_48h')}
             </p>
           </div>
 
           {/* Description */}
           {product.description && (
             <div className="pt-6 border-t border-ink/10 space-y-2">
-              <h3 className="text-xs uppercase font-bold tracking-wider text-ink">Опис на моделот:</h3>
+              <h3 className="text-xs uppercase font-bold tracking-wider text-ink">{t('model_description')}</h3>
               <p className="text-sm text-ink/80 leading-relaxed whitespace-pre-line">
                 {product.description}
               </p>
@@ -183,15 +185,15 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <div className="pt-6 border-t border-ink/10 space-y-3 text-xs text-ink/80">
             <div className="flex items-center gap-2">
               <MapPin size={16} className="text-retro-orange shrink-0" />
-              <span>Подигнување: Stiv Naumov 8, Prilep</span>
+              <span>{t('guarantee_location')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-retro-orange shrink-0" />
-              <span>Работно време: Пон–Саб 09:00 – 20:00</span>
+              <span>{t('guarantee_hours')}</span>
             </div>
             <div className="flex items-center gap-2">
               <ShieldCheck size={16} className="text-retro-orange shrink-0" />
-              <span>Можност за проба и замена на големина на лице место</span>
+              <span>{t('guarantee_fitting')}</span>
             </div>
           </div>
         </div>

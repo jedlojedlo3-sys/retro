@@ -1,9 +1,14 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, MapPin } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export function HeroSection() {
+  const { t } = useLanguage();
+
   return (
     <section className="relative w-full min-h-[85vh] flex items-end pb-16 sm:pb-24 px-4 sm:px-12 overflow-hidden bg-ink">
       {/* Background Image */}
@@ -22,18 +27,18 @@ export function HeroSection() {
       {/* Hero Content Box */}
       <div className="relative z-10 max-w-4xl text-white space-y-6">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-retro-orange/90 text-ink text-xs uppercase font-extrabold tracking-widest rounded-sm">
-          <span>MEN&apos;S CASUAL WEAR · PRILEP</span>
+          <span>{t('hero_eyebrow')}</span>
         </div>
 
         <h1 className="font-display text-6xl sm:text-8xl md:text-9xl leading-[0.85] tracking-tight uppercase">
-          RETRO <br />
+          {t('hero_title_1')} <br />
           <span className="text-transparent" style={{ WebkitTextStroke: '2px rgba(255,255,255,0.9)' }}>
-            BOUTIQUE
+            {t('hero_title_2')}
           </span>
         </h1>
 
         <p className="text-base sm:text-xl text-white/80 max-w-xl font-normal leading-relaxed">
-          Casual машка мода, одличен избор и искрен личен пристап во Прилеп од 2003 година. Резервирај го твоето парче онлајн, подигни и плати во продавницата.
+          {t('hero_desc')}
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
@@ -41,7 +46,7 @@ export function HeroSection() {
             href="/products"
             className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-white hover:bg-retro-orange text-ink hover:text-white font-bold text-sm tracking-wider uppercase transition-all transform hover:-translate-y-0.5 shadow-lg"
           >
-            <span>Погледни ја колекцијата</span>
+            <span>{t('hero_cta_shop')}</span>
             <ArrowRight size={18} />
           </Link>
 
@@ -50,7 +55,7 @@ export function HeroSection() {
             className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-ink/70 hover:bg-ink text-white border border-white/20 hover:border-white/60 font-semibold text-sm tracking-wider uppercase backdrop-blur-sm transition-all"
           >
             <MapPin size={16} className="text-retro-orange" />
-            <span>Stiv Naumov 8, Prilep</span>
+            <span>{t('hero_cta_visit')}</span>
           </Link>
         </div>
       </div>

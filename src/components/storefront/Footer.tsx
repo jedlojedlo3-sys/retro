@@ -1,10 +1,14 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Instagram, MapPin, Clock, Shield } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { t } = useLanguage();
 
   return (
     <footer className="bg-ink text-white pt-14 pb-8 px-4 sm:px-8 border-t border-ink/20 mt-auto">
@@ -29,14 +33,14 @@ export function Footer() {
             </div>
           </div>
           <p className="text-sm text-white/70 leading-relaxed max-w-sm">
-            Локална машка продавница за облека во Прилеп. Квалитетни фармерки, кошули, џемпери и секојдневна машка мода со искрена и лична услуга.
+            {t('footer_about')}
           </p>
         </div>
 
         {/* Col 2: Location & Hours */}
         <div className="space-y-3">
           <h4 className="font-display text-lg tracking-wider uppercase text-retro-orange">
-            Локација & Работно време
+            {t('visit_hours_label')}
           </h4>
           <div className="space-y-2 text-sm text-white/80">
             <p className="flex items-start gap-2">
@@ -46,9 +50,9 @@ export function Footer() {
             <p className="flex items-start gap-2">
               <Clock size={18} className="text-retro-orange shrink-0 mt-0.5" />
               <span>
-                Понеделник – Сабота: <strong>09:00 – 20:00</strong>
+                {t('visit_mon_sat')} <strong>09:00 – 20:00</strong>
                 <br />
-                Недела: <span className="text-white/50">Затворено</span>
+                {t('visit_sun')} <span className="text-white/50">{t('visit_closed')}</span>
               </span>
             </p>
           </div>
@@ -60,7 +64,7 @@ export function Footer() {
             Click & Collect
           </h4>
           <p className="text-sm text-white/70 leading-relaxed">
-            Избери големина и резервирај онлајн за 10 секунди. Резервацијата те чека во продавницата 48 часа. Без онлајн плаќање.
+            {t('footer_click_collect_desc')}
           </p>
           <div className="pt-2">
             <a
@@ -70,7 +74,7 @@ export function Footer() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded text-xs uppercase tracking-wider font-semibold transition-colors"
             >
               <Instagram size={16} className="text-retro-orange" />
-              <span>Следи нè на Instagram</span>
+              <span>{t('footer_instagram_btn')}</span>
             </a>
           </div>
         </div>
@@ -78,11 +82,11 @@ export function Footer() {
 
       {/* Bottom bar */}
       <div className="max-w-7xl mx-auto pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-white/40 gap-4">
-        <span>© {currentYear} Retro Boutique Prilep. Сите права се задржани.</span>
+        <span>© {currentYear} Retro Boutique Prilep. {t('footer_rights')}</span>
         <div className="flex items-center gap-6">
           <Link href="/admin" className="hover:text-white/80 flex items-center gap-1 transition-colors">
             <Shield size={13} />
-            <span>Марија Админ</span>
+            <span>{t('nav_admin')}</span>
           </Link>
         </div>
       </div>

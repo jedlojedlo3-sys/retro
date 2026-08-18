@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/types/database';
-import { formatPrice, getCategoryLabel } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { ReserveModal } from './ReserveModal';
 
 interface ProductCardProps {
@@ -13,6 +14,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const [reserveModalOpen, setReserveModalOpen] = useState(false);
+  const { t, getCategoryText } = useLanguage();
 
   // Compute total available pieces across all sizes
   const totalAvailable = product.variants?.reduce((acc, v) => {
@@ -39,18 +41,18 @@ export function ProductCard({ product }: ProductCardProps) {
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {isOutOfStock ? (
               <span className="px-2.5 py-1 bg-ink/85 text-white text-[11px] font-bold uppercase tracking-wider backdrop-blur-sm">
-                Распродадено
+                {t('sold_out')}
               </span>
             ) : totalAvailable <= 2 ? (
               <span className="px-2.5 py-1 bg-retro-orange text-ink text-[11px] font-extrabold uppercase tracking-wider">
-                Само {totalAvailable} на залиха
+                {t('only_x_left', { count: totalAvailable })}
               </span>
             ) : null}
           </div>
 
           <div className="absolute top-3 right-3">
             <span className="px-2 py-1 bg-paper/90 text-ink text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
-              {getCategoryLabel(product.category)}
+              {getCategoryText(product.category)}
             </span>
           </div>
         </Link>
@@ -72,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
           {product.variants && product.variants.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-[11px] uppercase font-bold text-muted tracking-wider block">
-                Големини:
+                {t('sizes_label')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {product.variants.map((variant) => {
@@ -86,7 +88,7 @@ export function ProductCard({ product }: ProductCardProps) {
                           ? 'border-ink/20 text-ink bg-paper-light'
                           : 'border-ink/10 text-muted/40 line-through bg-zinc-100'
                       }`}
-                      title={isAvailable ? `Достапни: ${avail}` : 'Нема залиха'}
+                      title={isAvailable ? `${t('stock_label')} ${avail}` : t('no_stock')}
                     >
                       {variant.size}
                     </span>
@@ -102,7 +104,7 @@ export function ProductCard({ product }: ProductCardProps) {
               href={`/products/${product.id}`}
               className="py-2.5 px-3 text-center border border-ink text-ink hover:bg-ink hover:text-white font-bold text-xs uppercase tracking-wider transition-colors"
             >
-              Детали
+              {t('btn_details')}
             </Link>
             <button
               onClick={() => setReserveModalOpen(true)}
@@ -113,7 +115,7 @@ export function ProductCard({ product }: ProductCardProps) {
                   : 'bg-ink text-white hover:bg-retro-orange hover:text-ink'
               }`}
             >
-              {isOutOfStock ? 'Нема залиха' : 'Резервирај'}
+              {isOutOfStock ? t('no_stock') : t('btn_reserve')}
             </button>
           </div>
         </div>

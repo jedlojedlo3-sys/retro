@@ -1,7 +1,12 @@
+'use client';
+
 import React from 'react';
-import { MapPin, Clock, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 export function VisitSection() {
+  const { t } = useLanguage();
+
   return (
     <section id="visit" className="w-full py-16 sm:py-24 px-4 sm:px-8 bg-paper">
       <div className="max-w-7xl mx-auto">
@@ -10,36 +15,36 @@ export function VisitSection() {
           <div className="lg:col-span-5 bg-retro-orange text-ink p-8 sm:p-12 flex flex-col justify-between shadow-lg">
             <div className="space-y-6">
               <span className="text-xs uppercase font-extrabold tracking-widest block opacity-80">
-                ПОСЕТИ НÈ ВО ПРОДАВНИЦАТА
+                {t('visit_eyebrow')}
               </span>
               <h2 className="font-display text-5xl sm:text-6xl uppercase leading-none">
                 RETRO <br />
                 BOUTIQUE
               </h2>
               <p className="text-sm sm:text-base leading-relaxed opacity-95 font-medium">
-                Нашата продавница се наоѓа во срцето на Прилеп. Посети нè за да ги пробаш новите модели и да добиеш искрен совет за големина и комбинација.
+                {t('visit_desc')}
               </p>
 
               <div className="space-y-4 pt-4 border-t border-ink/20 text-sm">
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 block">
-                    Адреса
+                    {t('visit_address_label')}
                   </span>
                   <strong className="text-base font-bold">Stiv Naumov 8, Prilep 7500</strong>
                 </div>
 
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-wider opacity-70 block">
-                    Работно време
+                    {t('visit_hours_label')}
                   </span>
                   <div className="space-y-0.5">
                     <p className="flex justify-between">
-                      <span>Понеделник – Сабота:</span>
+                      <span>{t('visit_mon_sat')}</span>
                       <strong>09:00 – 20:00</strong>
                     </p>
                     <p className="flex justify-between">
-                      <span>Недела:</span>
-                      <strong>Затворено</strong>
+                      <span>{t('visit_sun')}</span>
+                      <strong>{t('visit_closed')}</strong>
                     </p>
                   </div>
                 </div>
@@ -53,7 +58,7 @@ export function VisitSection() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 w-full py-4 bg-ink text-white hover:bg-white hover:text-ink font-bold text-xs uppercase tracking-wider transition-colors"
               >
-                <span>Отвори на Google Maps</span>
+                <span>{t('visit_maps_btn')}</span>
                 <ExternalLink size={16} />
               </a>
             </div>
