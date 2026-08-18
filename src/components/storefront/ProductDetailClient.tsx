@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, MapPin, Clock, ShieldCheck } from 'lucide-react';
@@ -8,13 +8,23 @@ import { Product } from '@/types/database';
 import { formatPrice } from '@/lib/utils';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { ReserveModal } from './ReserveModal';
+import { getClientProductById } from '@/lib/products-store';
 
 interface ProductDetailClientProps {
   product: Product;
 }
 
-export function ProductDetailClient({ product }: ProductDetailClientProps) {
+export function ProductDetailClient({ product: initialProduct }: ProductDetailClientProps) {
   const { t, getCategoryText } = useLanguage();
+  const [product, setProduct] = useState<Product>(initialProduct);
+
+  useEffect(() => {
+    const updated = getClientProductById(initialProduct.id, initialProduct);
+    if (updated) {
+      setProduct(updated);
+    }
+  }, [initialProduct]);
+
   const allImages = [product.image_url, ...(product.additional_images || [])].filter(Boolean);
   const [selectedImage, setSelectedImage] = useState<string>(allImages[0] || '/assets/look-01.jpg');
 

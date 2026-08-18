@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Category } from '@/types/database';
+import { Category, Product } from '@/types/database';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, category, price, description, image_url, additional_images, variants, active } = body;
+    const { id, name, category, price, description, image_url, additional_images, variants, active } = body;
 
     if (!name?.trim()) {
       return NextResponse.json({ success: false, error: 'Името на производот е задолжително.' }, { status: 400 });
@@ -17,6 +17,43 @@ export async function POST(request: NextRequest) {
 
     if (!image_url?.trim()) {
       return NextResponse.json({ success: false, error: 'Потребна е барем една слика.' }, { status: 400 });
+    }
+
+    const supabaseConfigured = Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    if (!supabaseConfigured) {
+      // Simulation / Preview Mode
+      const simulatedProduct: Product = {
+        id: id || `prod-${Date.now()}`,
+        name: name.trim(),
+        category: (category || 'other') as Category,
+        price: Number(price),
+        description: description?.trim() || null,
+        image_url: image_url.trim(),
+        additional_images: additional_images || [],
+        active: active !== false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        variants: Array.isArray(variants)
+          ? variants.map((v: any, idx: number) => ({
+              id: v.id || `v-${id || 'demo'}-${idx}`,
+              product_id: id || 'demo',
+              size: String(v.size).trim().toUpperCase(),
+              stock_quantity: Math.max(0, Number(v.stock_quantity) || 0),
+              reserved_quantity: 0,
+              display_order: idx + 1,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }))
+          : [],
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: simulatedProduct,
+      });
     }
 
     const adminClient = createAdminClient();
@@ -77,6 +114,32 @@ export async function PUT(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
+    }
+
+    const supabaseConfigured = Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    if (!supabaseConfigured) {
+      // Simulation / Preview Mode
+      const simulatedProduct: Product = {
+        id,
+        name: name?.trim() || '',
+        category: category as Category,
+        price: Number(price),
+        description: description?.trim() || null,
+        image_url: image_url?.trim() || '',
+        additional_images: additional_images || [],
+        active: active !== false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        variants: Array.isArray(variants) ? variants : [],
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: simulatedProduct,
+      });
     }
 
     const adminClient = createAdminClient();

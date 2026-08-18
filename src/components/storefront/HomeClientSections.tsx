@@ -1,20 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ShoppingBag, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { Product } from '@/types/database';
 import { ProductCard } from './ProductCard';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { getClientProducts } from '@/lib/products-store';
 
 interface HomeClientSectionsProps {
   products: Product[];
 }
 
-export function HomeClientSections({ products }: HomeClientSectionsProps) {
+export function HomeClientSections({ products: initialProducts }: HomeClientSectionsProps) {
   const { t } = useLanguage();
-  const featuredProducts = products.slice(0, 6);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+
+  useEffect(() => {
+    setProducts(getClientProducts(initialProducts));
+  }, [initialProducts]);
+
+  const activeProducts = products.filter((p) => p.active !== false);
+  const featuredProducts = activeProducts.slice(0, 6);
 
   return (
     <>

@@ -3,12 +3,12 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { PlusCircle, Edit3, Eye, EyeOff, Search, AlertCircle } from 'lucide-react';
+import { PlusCircle, Edit3, Eye, EyeOff, Search, Trash2 } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Product } from '@/types/database';
 import { formatPrice, getCategoryLabel } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import { FALLBACK_DEMO_PRODUCTS } from '@/lib/mock-data';
+import { getClientProducts, saveClientProduct, deleteClientProduct } from '@/lib/products-store';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -17,6 +17,10 @@ export default function AdminProductsPage() {
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'hidden'>('all');
 
   const fetchProducts = async () => {
+    // 1. Initial client products
+    const clientList = getClientProducts([]);
+    setProducts(clientList);
+
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -24,13 +28,12 @@ export default function AdminProductsPage() {
         .select('*, variants:product_variants(*)')
         .order('created_at', { ascending: false });
 
-      if (error || !data || data.length === 0) {
-        setProducts(FALLBACK_DEMO_PRODUCTS);
-      } else {
-        setProducts(data as Product[]);
+      if (!error && data && data.length > 0) {
+        const merged = getClientProducts(data as Product[]);
+        setProducts(merged);
       }
     } catch {
-      setProducts(FALLBACK_DEMO_PRODUCTS);
+      // keep client list
     } finally {
       setLoading(false);
     }
@@ -41,18 +44,37 @@ export default function AdminProductsPage() {
   }, []);
 
   const handleToggleActive = async (productId: string, currentActive: boolean) => {
-    const nextActive = !currentActive;
+    const target = products.find((p) => p.id === productId);
+    if (!target) return;
 
-    // Optimistic UI update
+    const updatedProduct = { ...target, active: !currentActive };
+    saveClientProduct(updatedProduct);
+
     setProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, active: nextActive } : p))
+      prev.map((p) => (p.id === productId ? updatedProduct : p))
     );
 
     try {
       const supabase = createClient();
-      await supabase.from('products').update({ active: nextActive }).eq('id', productId);
-    } catch (err) {
-      console.error('Failed to toggle active', err);
+      await supabase.from('products').update({ active: !currentActive }).eq('id', productId);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!window.confirm(`Дали сте сигурни дека сакате да го избришете моделот "${productName}"?`)) {
+      return;
+    }
+
+    deleteClientProduct(productId);
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+
+    try {
+      const supabase = createClient();
+      await supabase.from('products').delete().eq('id', productId);
+    } catch {
+      // ignore
     }
   };
 
@@ -79,13 +101,13 @@ export default function AdminProductsPage() {
               placeholder="Пребарај..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-ink/15 text-ink focus:outline-none focus:border-ink rounded-none"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-black/10 text-ink focus:outline-none focus:border-ink rounded-none"
             />
           </div>
 
           <Link
             href="/admin/products/new"
-            className="px-3.5 py-2 bg-ink text-white hover:bg-retro-orange hover:text-ink font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-colors"
+            className="px-4 py-2.5 bg-ink text-white hover:bg-retro-orange hover:text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
           >
             <PlusCircle size={15} />
             <span>Додај</span>
@@ -97,7 +119,7 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setFilterActive('all')}
             className={`px-3 py-1.5 border transition-all ${
-              filterActive === 'all' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-ink/15'
+              filterActive === 'all' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
             Сите ({products.length})
@@ -105,7 +127,7 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setFilterActive('active')}
             className={`px-3 py-1.5 border transition-all ${
-              filterActive === 'active' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-ink/15'
+              filterActive === 'active' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
             Активни ({products.filter((p) => p.active).length})
@@ -113,7 +135,7 @@ export default function AdminProductsPage() {
           <button
             onClick={() => setFilterActive('hidden')}
             className={`px-3 py-1.5 border transition-all ${
-              filterActive === 'hidden' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-ink/15'
+              filterActive === 'hidden' ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-black/10'
             }`}
           >
             Скриени ({products.filter((p) => !p.active).length})
@@ -133,12 +155,12 @@ export default function AdminProductsPage() {
               <div
                 key={product.id}
                 className={`bg-white border p-3.5 sm:p-4 flex items-center justify-between gap-4 transition-all ${
-                  product.active ? 'border-ink/15 shadow-sm' : 'border-dashed border-zinc-300 opacity-60 bg-zinc-50'
+                  product.active ? 'border-black/10 shadow-sm' : 'border-dashed border-zinc-300 opacity-60 bg-zinc-50'
                 }`}
               >
                 {/* Left: Image & Info */}
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="relative w-16 h-20 bg-paper-dark shrink-0 overflow-hidden border border-ink/10">
+                  <div className="relative w-16 h-20 bg-surface shrink-0 overflow-hidden border border-black/10">
                     <Image
                       src={product.image_url || '/assets/look-01.jpg'}
                       alt={product.name}
@@ -149,7 +171,7 @@ export default function AdminProductsPage() {
 
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-paper text-muted border border-ink/10">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-surface text-muted border border-black/10">
                         {getCategoryLabel(product.category)}
                       </span>
                       {!product.active && (
@@ -173,10 +195,10 @@ export default function AdminProductsPage() {
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => handleToggleActive(product.id, product.active)}
-                    className="p-2 border border-ink/15 hover:border-ink rounded text-ink transition-colors"
+                    className="p-2 border border-black/10 hover:border-ink text-ink transition-colors"
                     title={product.active ? 'Скриј од продавница' : 'Прикажи во продавница'}
                   >
                     {product.active ? <Eye size={16} /> : <EyeOff size={16} className="text-muted" />}
@@ -184,18 +206,26 @@ export default function AdminProductsPage() {
 
                   <Link
                     href={`/admin/products/${product.id}`}
-                    className="px-3 py-2 bg-paper hover:bg-ink hover:text-white border border-ink/20 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                    className="px-3 py-2 bg-surface hover:bg-ink hover:text-white border border-black/10 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                   >
                     <Edit3 size={14} />
                     <span>Измени</span>
                   </Link>
+
+                  <button
+                    onClick={() => handleDeleteProduct(product.id, product.name)}
+                    className="p-2 border border-black/10 hover:border-red-600 hover:text-red-600 text-muted transition-colors"
+                    title="Избриши производ"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
             );
           })}
 
           {filteredProducts.length === 0 && !loading && (
-            <div className="bg-white border border-ink/10 p-8 text-center text-xs text-muted">
+            <div className="bg-white border border-black/10 p-8 text-center text-xs text-muted">
               Нема производи за прикажување.
             </div>
           )}

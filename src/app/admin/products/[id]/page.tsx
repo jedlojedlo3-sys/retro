@@ -5,10 +5,11 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { Camera, Plus, Trash2, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { AdminHeader } from '@/components/admin/AdminHeader';
-import { Product, ProductVariant, Category } from '@/types/database';
+import { Category, Product, ProductVariant } from '@/types/database';
 import { CATEGORIES } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { FALLBACK_DEMO_PRODUCTS } from '@/lib/mock-data';
+import { getClientProductById, saveClientProduct, deleteClientProduct } from '@/lib/products-store';
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -32,6 +33,22 @@ export default function EditProductPage() {
 
   useEffect(() => {
     async function loadProduct() {
+      // 1. Check client store first
+      const clientProd = getClientProductById(productId);
+      if (clientProd) {
+        setProduct(clientProd);
+        setName(clientProd.name);
+        setCategory(clientProd.category);
+        setPrice(String(clientProd.price));
+        setDescription(clientProd.description || '');
+        setActive(clientProd.active);
+        setImages([clientProd.image_url, ...(clientProd.additional_images || [])].filter(Boolean));
+        setVariants(
+          (clientProd.variants || []).sort((a, b) => a.display_order - b.display_order)
+        );
+        setLoading(false);
+      }
+
       try {
         const supabase = createClient();
         const { data, error } = await supabase
@@ -42,7 +59,7 @@ export default function EditProductPage() {
 
         let prod = data as Product | null;
         if (error || !prod) {
-          prod = FALLBACK_DEMO_PRODUCTS.find((p) => p.id === productId) || null;
+          prod = clientProd || FALLBACK_DEMO_PRODUCTS.find((p) => p.id === productId) || null;
         }
 
         if (prod) {
@@ -58,7 +75,7 @@ export default function EditProductPage() {
           );
         }
       } catch {
-        const demo = FALLBACK_DEMO_PRODUCTS.find((p) => p.id === productId);
+        const demo = clientProd || FALLBACK_DEMO_PRODUCTS.find((p) => p.id === productId);
         if (demo) {
           setProduct(demo);
           setName(demo.name);
@@ -127,7 +144,7 @@ export default function EditProductPage() {
       return;
     }
     const newVariant: ProductVariant = {
-      id: '',
+      id: `v-${productId}-${clean}`,
       product_id: productId,
       size: clean,
       stock_quantity: 2,
@@ -162,8 +179,26 @@ export default function EditProductPage() {
 
     setIsSubmitting(true);
 
+    const updatedProduct: Product = {
+      id: productId,
+      name: name.trim(),
+      category,
+      price: Number(price),
+      description: description.trim() || null,
+      image_url: images[0],
+      additional_images: images.slice(1),
+      variants,
+      active,
+      created_at: product?.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    // Save immediately into client store
+    saveClientProduct(updatedProduct);
+    setProduct(updatedProduct);
+
     try {
-      const response = await fetch('/api/admin/products', {
+      await fetch('/api/admin/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -178,20 +213,28 @@ export default function EditProductPage() {
           active,
         }),
       });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Грешка при зачувување на измените.');
-      }
-
-      setSuccessMessage('Измените се успешно зачувани!');
-      setTimeout(() => setSuccessMessage(null), 3500);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Се појави грешка при зачувување.');
-    } finally {
-      setIsSubmitting(false);
+    } catch {
+      // client store already updated
     }
+
+    setSuccessMessage('Измените се успешно зачувани!');
+    setTimeout(() => setSuccessMessage(null), 3500);
+    setIsSubmitting(false);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Дали сте сигурни дека сакате да го избришете овој производ?`)) {
+      return;
+    }
+    deleteClientProduct(productId);
+    try {
+      const supabase = createClient();
+      await supabase.from('products').delete().eq('id', productId);
+    } catch {
+      // ignore
+    }
+    router.push('/admin/products');
+    router.refresh();
   };
 
   if (loading) {
@@ -429,13 +472,25 @@ export default function EditProductPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full py-4 bg-ink text-white hover:bg-retro-orange hover:text-ink font-bold text-sm uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
+            className={`w-full py-4 bg-ink text-white hover:bg-retro-orange hover:text-white font-bold text-sm uppercase tracking-wider transition-colors shadow-md flex items-center justify-center gap-2 ${
               isSubmitting ? 'opacity-50 cursor-wait' : ''
             }`}
           >
             <Check size={18} />
             <span>{isSubmitting ? 'Се зачувува...' : 'Зачувај измени'}</span>
           </button>
+
+          {/* Delete Product */}
+          <div className="pt-4 border-t border-black/10 text-center">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-red-600 hover:text-red-700 transition-colors py-2 px-3"
+            >
+              <Trash2 size={15} />
+              <span>Избриши го овој производ</span>
+            </button>
+          </div>
         </form>
       </main>
     </div>

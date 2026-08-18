@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product } from '@/types/database';
 import { CATEGORIES } from '@/lib/utils';
 import { ProductCard } from './ProductCard';
 import { Search, SlidersHorizontal, PackageOpen } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { getClientProducts } from '@/lib/products-store';
 
 interface ProductsCatalogProps {
   initialProducts: Product[];
@@ -13,13 +14,22 @@ interface ProductsCatalogProps {
 
 export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
   const { t, getCategoryText, language } = useLanguage();
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
 
+  useEffect(() => {
+    setProducts(getClientProducts(initialProducts));
+  }, [initialProducts]);
+
+  const activeProducts = useMemo(() => {
+    return products.filter((p) => p.active !== false);
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
-    return initialProducts
+    return activeProducts
       .filter((product) => {
         if (selectedCategory !== 'all' && product.category !== selectedCategory) return false;
         if (searchQuery.trim()) {
@@ -37,7 +47,7 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
         if (sortBy === 'price_desc') return b.price - a.price;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-  }, [initialProducts, selectedCategory, searchQuery, onlyInStock, sortBy]);
+  }, [activeProducts, selectedCategory, searchQuery, onlyInStock, sortBy]);
 
   return (
     <div className="space-y-10">
@@ -69,10 +79,10 @@ export function ProductsCatalog({ initialProducts }: ProductsCatalogProps) {
                 : 'border-black/10 text-muted hover:border-ink hover:text-ink'
             }`}
           >
-            {t('cat_all')} ({initialProducts.length})
+            {t('cat_all')} ({activeProducts.length})
           </button>
           {CATEGORIES.map((cat) => {
-            const count = initialProducts.filter((p) => p.category === cat.key).length;
+            const count = activeProducts.filter((p) => p.category === cat.key).length;
             return (
               <button
                 key={cat.key}
